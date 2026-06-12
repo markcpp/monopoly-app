@@ -53,12 +53,12 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .player-name-input{font-size:14px;font-weight:700;color:#1a1a2e;background:#f5c842;border:none;border-radius:6px;padding:2px 6px;width:110px;outline:none;font-family:inherit}
 .player-money{font-size:26px;font-weight:900;color:#f5c842;letter-spacing:1px;font-variant-numeric:tabular-nums}
 .player-money.negative{color:#e74c3c}
-.player-preview{font-size:12px;color:#8892b0;display:none;margin-top:1px}
+.player-preview{font-size:13px;color:#8892b0;min-height:20px;margin-top:4px;text-align:center;font-weight:600}
 .player-preview.show{display:block}
 .player-preview .val{color:#2ecc71;font-weight:700}
 .player-preview .val.negative{color:#e74c3c}
 .player-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.amount-badge{font-size:12px;color:#8892b0;background:rgba(255,255,255,0.06);padding:4px 8px;border-radius:8px;min-width:44px;text-align:center;font-weight:600;cursor:pointer;transition:background 0.15s}
+.amount-badge{height:40px;width:52px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#8892b0;background:rgba(255,255,255,0.06);border-radius:10px;text-align:center;font-weight:700;cursor:pointer;transition:background 0.15s;padding:0}
 .amount-badge:active{background:rgba(255,255,255,0.12)}
 .btn-round{width:40px;height:40px;border-radius:50%;border:none;font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.12s;line-height:1}
 .btn-round:active{transform:scale(0.9)}
@@ -68,7 +68,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .btn-confirm.show{display:flex}
 .btn-confirm:active{background:rgba(245,200,66,0.3)}
 .dice-area{flex-shrink:0;padding:10px 16px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center}
-.roll-btn{padding:18px 48px;border-radius:18px;border:none;background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);color:#fff;font-size:22px;font-weight:800;letter-spacing:3px;cursor:pointer;box-shadow:0 6px 24px rgba(231,76,60,0.35);transition:all 0.15s;white-space:nowrap}
+.roll-btn{padding:20px 56px;border-radius:18px;font-size:24px;border:none;background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);color:#fff;font-size:22px;font-weight:800;letter-spacing:3px;cursor:pointer;box-shadow:0 6px 24px rgba(231,76,60,0.35);transition:all 0.15s;white-space:nowrap}
 .roll-btn:active{transform:scale(0.94);opacity:0.9}
 .roll-btn:disabled{opacity:0.4;pointer-events:none}
 .amount-presets{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:8px 16px 0;flex-shrink:0}
@@ -297,7 +297,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   });
 
   exitBtn.addEventListener('click', async () => {
-    const ok = await showModal('确定退出当前游戏吗？\n游戏进度不会保存');
+    const ok = await showModal('确定退出当前游戏吗？
+游戏进度不会保存');
     if (ok) { stopBGM(); state.bgmOn = false; bgmBtn.textContent = '🔇'; bgmBtn.classList.remove('bgm-on'); switchScreen('menu'); }
   });
 
@@ -335,14 +336,14 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
         '<div class="player-main">' +
           '<span class="player-name" data-action="edit-name" data-idx="' + i + '">' + escHtml(p.name) + '</span>' +
           '<div class="player-money' + (p.money < 0 ? ' negative' : '') + '">$' + p.money.toLocaleString() + '</div>' +
-          '<div class="player-preview' + (pc != null ? ' show' : '') + '"><span class="val' + (pc < 0 ? ' negative' : '') + '">$' + (pc != null ? pc.toLocaleString() : '0') + '</span></div>' +
         '</div>' +
         '<div class="player-actions">' +
           '<button class="btn-round btn-minus" data-action="sub" data-idx="' + i + '">−</button>' +
           '<div class="amount-badge" data-action="cycle" data-idx="' + i + '">$' + state.selectedAmount + '</div>' +
           '<button class="btn-round btn-plus" data-action="add" data-idx="' + i + '">+</button>' +
         '</div>' +
-        '<button class="btn-confirm' + (pc === 0 ? ' gray' : '') + '" data-action="confirm-change" data-idx="' + i + '">✓ 确定</button>' +
+        '<div class="player-preview' + (pc != null ? ' show' : '') + '"><span class="val' + (pc < 0 ? ' negative' : '') + '">$' + (pc != null ? pc.toLocaleString() : '0') + '</span></div>' +
+        '<button class="btn-confirm' + (pc === 0 ? ' gray' : '') + '" data-action="confirm-change" data-idx="' + i + '">确定</button>' +
       '</div>';
     }).join('');
   }
@@ -365,7 +366,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
       previewEl.classList.add('show');
       valEl.textContent = '$' + pc.toLocaleString();
       valEl.classList.toggle('negative', pc < 0);
-      confirmBtn.classList.toggle('gray', pc === 0);
+      confirmBtn.classList.toggle('gray', pc === p.money);
     } else {
       previewEl.classList.remove('show');
       confirmBtn.classList.remove('gray');
@@ -387,13 +388,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     } else if (action === 'confirm-change') {
       const pc = state.pendingChanges[idx];
       if (pc == null) return;
-      const ok = await showModal('确定将 「' + state.players[idx].name + '」\n金额修改为 $' + pc.toLocaleString() + ' 吗？');
-      if (ok) {
-        state.players[idx].money = pc;
-        delete state.pendingChanges[idx];
-        updatePlayerCard(idx);
-        showToast('✓ 已更新');
-      }
+      state.players[idx].money = pc;
+      delete state.pendingChanges[idx];
+      updatePlayerCard(idx);
     } else if (action === 'cycle') {
       const curIdx = presetAmounts.indexOf(state.selectedAmount);
       state.selectedAmount = presetAmounts[(curIdx + 1) % presetAmounts.length];
