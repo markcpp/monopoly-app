@@ -297,8 +297,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   });
 
   exitBtn.addEventListener('click', async () => {
-    const ok = await showModal('确定退出当前游戏吗？
-游戏进度不会保存');
+    const ok = await showModal('确定退出当前游戏吗？\n游戏进度不会保存');
     if (ok) { stopBGM(); state.bgmOn = false; bgmBtn.textContent = '🔇'; bgmBtn.classList.remove('bgm-on'); switchScreen('menu'); }
   });
 
