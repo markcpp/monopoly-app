@@ -47,13 +47,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .player-card.p3::before{background:#f39c12}
 .player-card.p4::before{background:#9b59b6}
 .player-card.p5::before{background:#1abc9c}
-.player-color-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0}
-.p0 .player-color-dot{background:#e74c3c}
-.p1 .player-color-dot{background:#3498db}
-.p2 .player-color-dot{background:#2ecc71}
-.p3 .player-color-dot{background:#f39c12}
-.p4 .player-color-dot{background:#9b59b6}
-.p5 .player-color-dot{background:#1abc9c}
 .player-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .player-name{font-size:14px;font-weight:700;color:#ccd6f6;cursor:pointer;padding:2px 6px;border-radius:6px;transition:background 0.15s;display:inline-block;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player-name:hover{background:rgba(255,255,255,0.06)}
@@ -71,7 +64,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .btn-round:active{transform:scale(0.9)}
 .btn-minus{background:rgba(231,76,60,0.15);color:#e74c3c}
 .btn-plus{background:rgba(46,204,113,0.15);color:#2ecc71}
-.btn-confirm{background:rgba(245,200,66,0.2);color:#f5c842;font-size:13px;font-weight:700;padding:8px 14px;border-radius:10px;border:1px solid rgba(245,200,66,0.3);cursor:pointer;transition:all 0.12s;display:none;align-items:center;gap:4px}
+.btn-confirm{background:rgba(245,200,66,0.2);color:#f5c842;font-size:13px;font-weight:700;padding:8px 14px;border-radius:10px;border:1px solid rgba(245,200,66,0.3);cursor:pointer;transition:all 0.12s;display:flex;align-items:center;gap:4px}.btn-confirm.gray{background:rgba(255,255,255,0.04);color:#555;border-color:rgba(255,255,255,0.05);pointer-events:none}
 .btn-confirm.show{display:flex}
 .btn-confirm:active{background:rgba(245,200,66,0.3)}
 .dice-area{flex-shrink:0;padding:10px 16px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center}
@@ -87,13 +80,13 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .dice-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px}
 .dice-overlay.show{display:flex}
 .dice-row{display:flex;gap:24px}
-.big-die{width:100px;height:100px;background:#fafafa;border-radius:18px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:14px;gap:3px;box-shadow:0 8px 32px rgba(0,0,0,0.4),inset 0 -3px 6px rgba(0,0,0,0.1);animation:diceRoll 0.1s infinite}
+.big-die{width:130px;height:130px;background:#fafafa;border-radius:22px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:18px;gap:4px;box-shadow:0 8px 32px rgba(0,0,0,0.4),inset 0 -3px 6px rgba(0,0,0,0.1);animation:diceRoll 0.1s infinite}
 @keyframes diceRoll{0%{transform:rotate(0deg) translateY(0)}25%{transform:rotate(12deg) translateY(-8px)}50%{transform:rotate(-10deg) translateY(4px)}75%{transform:rotate(6deg) translateY(-4px)}100%{transform:rotate(0deg) translateY(0)}}
-.big-dot{width:16px;height:16px;border-radius:50%;background:#1a1a2e;margin:auto}
+.big-dot{width:20px;height:20px;border-radius:50%;background:#1a1a2e;margin:auto}
 .big-dot.tl{grid-area:1/1}.big-dot.tc{grid-area:1/2}.big-dot.tr{grid-area:1/3}
 .big-dot.ml{grid-area:2/1}.big-dot.mc{grid-area:2/2}.big-dot.mr{grid-area:2/3}
 .big-dot.bl{grid-area:3/1}.big-dot.bc{grid-area:3/2}.big-dot.br{grid-area:3/3}
-.overlay-result{font-size:48px;font-weight:900;color:#f5c842;opacity:0;transition:opacity 0.3s}
+.overlay-result{font-size:64px;font-weight:900;color:#f5c842;opacity:0;transition:opacity 0.3s}
 .overlay-result.show{opacity:1}
 
 /* Modal */
@@ -176,7 +169,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 <script>
 (function() {
   const state = { playerCount: 3, initMoney: 15000, selectedAmount: 200, players: [], rolling: false, pendingChanges: {}, bgmOn: false };
-  const presetAmounts = [50, 100, 200, 500, 1000, 2000];
+  const presetAmounts = [50, 100, 200, 500, 1000, 2000, 5000];
   const playerNames = ['玩家一', '玩家二', '玩家三', '玩家四', '玩家五', '玩家六'];
   const dotMap = { 1: ['mc'], 2: ['tr','bl'], 3: ['tr','mc','bl'], 4: ['tl','tr','bl','br'], 5: ['tl','tr','mc','bl','br'], 6: ['tl','tr','ml','mr','bl','br'] };
 
@@ -339,18 +332,17 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     playersContainer.innerHTML = state.players.map((p, i) => {
       const pc = state.pendingChanges[i];
       return '<div class="player-card p' + i + '">' +
-        '<div class="player-color-dot"></div>' +
         '<div class="player-main">' +
           '<span class="player-name" data-action="edit-name" data-idx="' + i + '">' + escHtml(p.name) + '</span>' +
           '<div class="player-money' + (p.money < 0 ? ' negative' : '') + '">$' + p.money.toLocaleString() + '</div>' +
-          '<div class="player-preview' + (pc != null ? ' show' : '') + '">修改后: <span class="val' + (pc < 0 ? ' negative' : '') + '">$' + (pc != null ? pc.toLocaleString() : '0') + '</span></div>' +
+          '<div class="player-preview' + (pc != null ? ' show' : '') + '"><span class="val' + (pc < 0 ? ' negative' : '') + '">$' + (pc != null ? pc.toLocaleString() : '0') + '</span></div>' +
         '</div>' +
         '<div class="player-actions">' +
           '<button class="btn-round btn-minus" data-action="sub" data-idx="' + i + '">−</button>' +
           '<div class="amount-badge" data-action="cycle" data-idx="' + i + '">$' + state.selectedAmount + '</div>' +
           '<button class="btn-round btn-plus" data-action="add" data-idx="' + i + '">+</button>' +
         '</div>' +
-        '<button class="btn-confirm' + (pc != null ? ' show' : '') + '" data-action="confirm-change" data-idx="' + i + '">✓ 确定</button>' +
+        '<button class="btn-confirm' + (pc === 0 ? ' gray' : '') + '" data-action="confirm-change" data-idx="' + i + '">✓ 确定</button>' +
       '</div>';
     }).join('');
   }
@@ -373,10 +365,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
       previewEl.classList.add('show');
       valEl.textContent = '$' + pc.toLocaleString();
       valEl.classList.toggle('negative', pc < 0);
-      confirmBtn.classList.add('show');
+      confirmBtn.classList.toggle('gray', pc === 0);
     } else {
       previewEl.classList.remove('show');
-      confirmBtn.classList.remove('show');
+      confirmBtn.classList.remove('gray');
     }
   }
 
@@ -461,8 +453,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
         const sum = final1 + final2;
         overlayResult.textContent = final1 + ' + ' + final2 + ' = ' + sum;
         overlayResult.classList.add('show');
+        bigDie1.style.animation = 'none';
+        bigDie2.style.animation = 'none';
         playResultSound();
-        showToast('🎲 骰子点数: ' + sum);
         setTimeout(() => {
           diceOverlay.classList.remove('show');
           state.rolling = false;
