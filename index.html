@@ -343,7 +343,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
         '<div class="player-main">' +
           '<span class="player-name" data-action="edit-name" data-idx="' + i + '">' + escHtml(p.name) + '</span>' +
           '<div class="player-money' + (p.money < 0 ? ' negative' : '') + '">$' + p.money.toLocaleString() + '</div>' +
-          '<div class="player-preview' + (pc != null ? ' show' : '') + '">修改后: <span class="val' + (pc < 0 ? ' negative' : '') + '">$' + pc.toLocaleString() + '</span></div>' +
+          '<div class="player-preview' + (pc != null ? ' show' : '') + '">修改后: <span class="val' + (pc < 0 ? ' negative' : '') + '">$' + (pc != null ? pc.toLocaleString() : '0') + '</span></div>' +
         '</div>' +
         '<div class="player-actions">' +
           '<button class="btn-round btn-minus" data-action="sub" data-idx="' + i + '">−</button>' +
