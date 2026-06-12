@@ -1,4 +1,4 @@
-const CACHE_NAME = 'monopoly-v2-09af';
+const CACHE_NAME = 'monopoly-v2-09b0';
 const FILES = [
   './',
   './index.html',
