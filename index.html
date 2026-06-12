@@ -331,6 +331,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   function renderPlayers() {
     playersContainer.innerHTML = state.players.map((p, i) => {
       const pc = state.pendingChanges[i];
+      const delta = pc != null ? pc - p.money : 0;
       return '<div class="player-card p' + i + '">' +
         '<div class="player-main">' +
           '<span class="player-name" data-action="edit-name" data-idx="' + i + '">' + escHtml(p.name) + '</span>' +
@@ -341,8 +342,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
           '<div class="amount-badge" data-action="cycle" data-idx="' + i + '">$' + state.selectedAmount + '</div>' +
           '<button class="btn-round btn-plus" data-action="add" data-idx="' + i + '">+</button>' +
         '</div>' +
-        '<div class="player-preview' + (pc != null ? ' show' : '') + '"><span class="val' + (pc < 0 ? ' negative' : '') + '">$' + (pc != null ? pc.toLocaleString() : '0') + '</span></div>' +
-        '<button class="btn-confirm' + (pc === 0 ? ' gray' : '') + '" data-action="confirm-change" data-idx="' + i + '">确定</button>' +
+        '<div class="player-preview' + (pc != null ? ' show' : '') + '"><span class="val' + (delta < 0 ? ' negative' : '') + '">' + (delta > 0 ? '+$' : '$') + (pc != null ? delta.toLocaleString() : '0') + '</span></div>' +
+        '<button class="btn-confirm' + (pc != null && pc === p.money ? ' gray' : '') + '" data-action="confirm-change" data-idx="' + i + '">确定</button>' +
       '</div>';
     }).join('');
   }
@@ -353,6 +354,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     const p = state.players[idx];
     const card = playersContainer.querySelectorAll('.player-card')[idx]; if (!card) return;
     const pc = state.pendingChanges[idx];
+    const delta = pc != null ? pc - p.money : 0;
     card.querySelector('.player-name').textContent = p.name;
     const moneyEl = card.querySelector('.player-money');
     moneyEl.textContent = '$' + p.money.toLocaleString();
@@ -363,9 +365,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     const confirmBtn = card.querySelector('.btn-confirm');
     if (pc != null) {
       previewEl.classList.add('show');
-      valEl.textContent = '$' + pc.toLocaleString();
-      valEl.classList.toggle('negative', pc < 0);
-      confirmBtn.classList.toggle('gray', pc === p.money);
+      valEl.textContent = (delta > 0 ? '+$' : '$') + delta.toLocaleString();
+      valEl.classList.toggle('negative', delta < 0);
+      confirmBtn.classList.toggle('gray', delta === 0);
     } else {
       previewEl.classList.remove('show');
       confirmBtn.classList.remove('gray');
