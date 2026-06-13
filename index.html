@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -38,7 +38,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .icon-btn{background:rgba(255,255,255,0.08);border:none;color:#ccd6f6;font-size:14px;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:4px;transition:all 0.12s}
 .icon-btn:active{background:rgba(255,255,255,0.15)}
 .icon-btn.bgm-on{color:#f5c842}
-.players-scroll{flex:0 0 auto;max-height:50vh;overflow-y:auto;padding:12px 12px 0;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.players-scroll{flex:0 0 auto;max-height:50vh;padding:6px 12px 0;display:flex;flex-direction:column;gap:10px}
 .player-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;position:relative;overflow:hidden;flex-wrap:wrap}
 .player-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:0 4px 4px 0}
 .player-card.p0::before{background:#e74c3c}
@@ -67,10 +67,13 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .btn-confirm{background:rgba(245,200,66,0.2);color:#f5c842;font-size:13px;font-weight:700;padding:8px 14px;border-radius:10px;border:1px solid rgba(245,200,66,0.3);cursor:pointer;transition:all 0.12s;display:flex;align-items:center;gap:4px}.btn-confirm.gray{background:rgba(255,255,255,0.04);color:#555;border-color:rgba(255,255,255,0.05);pointer-events:none}
 .btn-confirm.show{display:flex}
 .btn-confirm:active{background:rgba(245,200,66,0.3)}
-.dice-area{flex:1;padding:10px 0;padding-bottom:max(10px,env(safe-area-inset-bottom));background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center}
-.roll-btn{width:88%;max-width:420px;padding:clamp(12px,2vh,32px) 0;border-radius:18px;border:none;background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);color:#fff;font-size:clamp(20px,4vh,48px);font-weight:800;letter-spacing:3px;cursor:pointer;box-shadow:0 6px 24px rgba(231,76,60,0.35);transition:all 0.15s;white-space:nowrap}
+.dice-area{flex:1;padding:0;padding-bottom:max(8px,env(safe-area-inset-bottom));background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.roll-btn{width:90%;max-width:500px;padding:clamp(16px,3vh,48px) 0;border-radius:18px;border:none;background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);color:#fff;font-size:clamp(24px,5vh,72px);font-weight:800;letter-spacing:3px;cursor:pointer;box-shadow:0 6px 24px rgba(231,76,60,0.35);transition:all 0.15s;white-space:nowrap}
 .roll-btn:active{transform:scale(0.94);opacity:0.9}
 .roll-btn:disabled{opacity:0.4;pointer-events:none}
+.dice-count-row{display:flex;gap:8px}
+.dice-count-btn{background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.12);border-radius:10px;color:#8892b0;font-size:15px;font-weight:700;padding:8px 18px;cursor:pointer;transition:all 0.12s}
+.dice-count-btn.selected{background:#f5c842;border-color:#f5c842;color:#1a1a2e}
 .amount-presets{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:8px 16px 0;flex-shrink:0}
 .preset-btn{padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#8892b0;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.12s}
 .preset-btn:active{background:rgba(255,255,255,0.1)}
@@ -79,7 +82,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 /* Dice overlay */
 .dice-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px}
 .dice-overlay.show{display:flex}
-.dice-row{display:flex;gap:24px}
+.dice-row{display:flex;gap:24px;justify-content:center}
 .big-die{width:130px;height:130px;background:#fafafa;border-radius:22px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:18px;gap:4px;box-shadow:0 8px 32px rgba(0,0,0,0.4),inset 0 -3px 6px rgba(0,0,0,0.1);animation:diceRoll 0.1s infinite}
 @keyframes diceRoll{0%{transform:rotate(0deg) translateY(0)}25%{transform:rotate(12deg) translateY(-8px)}50%{transform:rotate(-10deg) translateY(4px)}75%{transform:rotate(6deg) translateY(-4px)}100%{transform:rotate(0deg) translateY(0)}}
 .big-dot{width:20px;height:20px;border-radius:50%;background:#1a1a2e;margin:auto}
@@ -103,8 +106,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 /* Toast */
 .toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#f5c842;padding:10px 24px;border-radius:24px;font-size:15px;font-weight:700;z-index:100;pointer-events:none;opacity:0;transition:opacity 0.25s}
 .toast.show{opacity:1}
-.players-scroll::-webkit-scrollbar{width:3px}
-.players-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
 </style>
 </head>
 <body>
@@ -142,6 +143,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   <div class="amount-presets" id="presets-bar"></div>
   <div class="players-scroll" id="players-container"></div>
   <div class="dice-area">
+    <div class="dice-count-row" id="dice-count-row"><button class="dice-count-btn selected" data-count="1">🎲×1</button><button class="dice-count-btn" data-count="2">🎲×2</button><button class="dice-count-btn" data-count="3">🎲×3</button></div>
     <button class="roll-btn" id="roll-btn">🎲 掷骰子</button>
   </div>
 </div>
@@ -150,6 +152,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   <div class="dice-row">
     <div class="big-die" id="big-die1"></div>
     <div class="big-die" id="big-die2"></div>
+    <div class="big-die" id="big-die3"></div>
   </div>
   <div class="overlay-result" id="overlay-result"></div>
 </div>
@@ -168,7 +171,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 
 <script>
 (function() {
-  const state = { playerCount: 3, initMoney: 15000, selectedAmount: 200, players: [], rolling: false, pendingChanges: {}, bgmOn: false };
+  const state = { playerCount: 3, initMoney: 15000, selectedAmount: 200, players: [], rolling: false, pendingChanges: {}, bgmOn: false, diceCount: 1 };
   const presetAmounts = [50, 100, 200, 500, 1000, 2000, 5000];
   const playerNames = ['玩家一', '玩家二', '玩家三', '玩家四', '玩家五', '玩家六'];
   const dotMap = { 1: ['mc'], 2: ['tr','bl'], 3: ['tr','mc','bl'], 4: ['tl','tr','bl','br'], 5: ['tl','tr','mc','bl','br'], 6: ['tl','tr','ml','mr','bl','br'] };
@@ -445,22 +448,14 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     let ticks = 0;
     const totalTicks = 12;
     const interval = setInterval(() => {
-      const v1 = Math.floor(Math.random() * 6) + 1;
-      const v2 = Math.floor(Math.random() * 6) + 1;
-      renderBigDie(bigDie1, v1);
-      renderBigDie(bigDie2, v2);
+      for (let d = 0; d < state.diceCount; d++) { const v = Math.floor(Math.random() * 6) + 1; renderBigDie([bigDie1,bigDie2,bigDie3][d], v); }
       ticks++;
       if (ticks >= totalTicks) {
         clearInterval(interval);
-        const final1 = Math.floor(Math.random() * 6) + 1;
-        const final2 = Math.floor(Math.random() * 6) + 1;
-        renderBigDie(bigDie1, final1);
-        renderBigDie(bigDie2, final2);
-        const sum = final1 + final2;
-        overlayResult.textContent = final1 + ' + ' + final2 + ' = ' + sum;
+        const diceEls = [bigDie1,bigDie2,bigDie3]; let sum = 0; const results = [];
+        for (let d = 0; d < state.diceCount; d++) { const v = Math.floor(Math.random() * 6) + 1; results.push(v); sum += v; renderBigDie(diceEls[d], v); diceEls[d].style.animation = 'none'; }
+        overlayResult.textContent = results.join(' + ') + ' = ' + sum;
         overlayResult.classList.add('show');
-        bigDie1.style.animation = 'none';
-        bigDie2.style.animation = 'none';
         playResultSound();
         setTimeout(() => {
           diceOverlay.classList.remove('show');
