@@ -39,7 +39,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .icon-btn:active{background:rgba(255,255,255,0.15)}
 .icon-btn.bgm-on{color:#f5c842}
 .players-scroll{flex:0 0 auto;max-height:50vh;padding:6px 12px 0;display:flex;flex-direction:column;gap:10px}
-.player-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:1px;display:flex;align-items:center;gap:10px;flex-shrink:0;position:relative;overflow:hidden;flex-wrap:wrap}
+ .player-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:3px;display:flex;align-items:center;gap:10px;flex-shrink:0;position:relative;overflow:hidden;flex-wrap:wrap}
 .player-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:0 4px 4px 0}
 .player-card.p0::before{background:#e74c3c}
 .player-card.p1::before{background:#3498db}
@@ -67,12 +67,12 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .btn-confirm{background:rgba(245,200,66,0.2);color:#f5c842;font-size:13px;font-weight:700;padding:8px 14px;border-radius:10px;border:1px solid rgba(245,200,66,0.3);cursor:pointer;transition:all 0.12s;display:flex;align-items:center;gap:4px}.btn-confirm.gray{background:rgba(255,255,255,0.04);color:#555;border-color:rgba(255,255,255,0.05);pointer-events:none}
 .btn-confirm.show{display:flex}
 .btn-confirm:active{background:rgba(245,200,66,0.3)}
- .dice-area{flex:1;padding:0 8px;padding-bottom:max(8px,env(safe-area-inset-bottom));background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;align-items:stretch;justify-content:center}
+ .dice-area{flex:1;padding:3px 8px 0;padding-bottom:max(8px,env(safe-area-inset-bottom));background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;align-items:stretch;justify-content:center}
  .dice-box{flex:1;display:flex;flex-direction:column;border-radius:18px;background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);box-shadow:0 6px 24px rgba(231,76,60,0.35);overflow:hidden}
- .roll-btn{flex:1;border:none;background:transparent;color:#fff;font-size:clamp(14px,2.5vh,36px);font-weight:800;letter-spacing:2px;cursor:pointer;transition:all 0.15s;white-space:nowrap;display:flex;align-items:center;justify-content:center;line-height:1}
+ .roll-btn{flex:1;flex-shrink:0;border:none;background:transparent;color:#fff;font-size:clamp(14px,2.5vh,36px);font-weight:800;letter-spacing:2px;cursor:pointer;transition:all 0.15s;white-space:nowrap;display:flex;align-items:center;justify-content:center;line-height:1;gap:8px}
 .roll-btn:active{transform:scale(0.94);opacity:0.9}
 .roll-btn:disabled{opacity:0.4;pointer-events:none}
- .dice-count-row{display:flex;flex-direction:row;gap:8px;justify-content:center;width:100%;padding:8px 12px 10px;margin-top:auto;flex-shrink:0}
+ .dice-count-row{flex:1;flex-shrink:0;display:flex;flex-direction:row;gap:8px;justify-content:center;align-items:center;width:100%;padding:0 12px}
  .dice-count-btn{background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.12);border-radius:8px;color:#8892b0;font-size:13px;font-weight:700;padding:4px 14px;cursor:pointer;transition:all 0.12s}
 .dice-count-btn.selected{background:#f5c842;border-color:#f5c842;color:#1a1a2e}
 .amount-presets{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:8px 16px 0;flex-shrink:0}
