@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -67,7 +67,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .btn-confirm{background:rgba(245,200,66,0.2);color:#f5c842;font-size:13px;font-weight:700;padding:8px 14px;border-radius:10px;border:1px solid rgba(245,200,66,0.3);cursor:pointer;transition:all 0.12s;display:flex;align-items:center;gap:4px}.btn-confirm.gray{background:rgba(255,255,255,0.04);color:#555;border-color:rgba(255,255,255,0.05);pointer-events:none}
 .btn-confirm.show{display:flex}
 .btn-confirm:active{background:rgba(245,200,66,0.3)}
-.dice-area{flex:1;padding:0;padding-bottom:max(8px,env(safe-area-inset-bottom));background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:row;align-items:stretch;justify-content:center;gap:12px}
+.dice-area{flex:1;padding:0;padding-bottom:max(8px,env(safe-area-inset-bottom));background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
 .roll-btn{flex:1;min-width:0;padding:clamp(10px,2vh,32px) 0;border-radius:18px;border:none;background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);color:#fff;font-size:clamp(18px,3vh,48px);font-weight:800;letter-spacing:3px;cursor:pointer;box-shadow:0 6px 24px rgba(231,76,60,0.35);transition:all 0.15s;white-space:nowrap}
 .roll-btn:active{transform:scale(0.94);opacity:0.9}
 .roll-btn:disabled{opacity:0.4;pointer-events:none}
@@ -442,6 +442,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     diceOverlay.classList.add('show');
     bigDie1.style.animation = '';
     bigDie2.style.animation = '';
+    bigDie3.style.animation = '';
+    bigDie1.style.display = state.diceCount >= 1 ? '' : 'none';
+    bigDie2.style.display = state.diceCount >= 2 ? '' : 'none';
+    bigDie3.style.display = state.diceCount >= 3 ? '' : 'none';
     overlayResult.classList.remove('show');
     overlayResult.textContent = '';
 
@@ -453,7 +457,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
       if (ticks >= totalTicks) {
         clearInterval(interval);
         const diceEls = [bigDie1,bigDie2,bigDie3]; let sum = 0; const results = [];
-        for (let d = 0; d < state.diceCount; d++) { const v = Math.floor(Math.random() * 6) + 1; results.push(v); sum += v; renderBigDie(diceEls[d], v); diceEls[d].style.animation = 'none'; }
+        for (let d = 0; d < state.diceCount; d++) { const v = Math.floor(Math.random() * 6) + 1; results.push(v); sum += v; renderBigDie(diceEls[d], v); diceEls[d].style.animation = 'none'; } bigDie1.style.animation = 'none'; bigDie2.style.animation = 'none'; bigDie3.style.animation = 'none';
         overlayResult.textContent = results.join(' + ') + ' = ' + sum;
         overlayResult.classList.add('show');
         playResultSound();
