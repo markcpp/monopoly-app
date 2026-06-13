@@ -71,8 +71,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
 .roll-btn{flex:1;min-width:0;padding:clamp(8px,1.5vh,24px) 0;border-radius:18px;border:none;background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);color:#fff;font-size:clamp(14px,2.5vh,36px);font-weight:800;letter-spacing:2px;cursor:pointer;box-shadow:0 6px 24px rgba(231,76,60,0.35);transition:all 0.15s;white-space:nowrap;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;gap:6px}
 .roll-btn:active{transform:scale(0.94);opacity:0.9}
 .roll-btn:disabled{opacity:0.4;pointer-events:none}
-.dice-count-row{display:flex;flex-direction:row;gap:4px;justify-content:center;height:auto}
-.dice-count-btn{background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.12);border-radius:6px;color:#8892b0;font-size:9px;font-weight:700;padding:1px 6px;cursor:pointer;transition:all 0.12s}
+ .dice-count-row{display:flex;flex-direction:row;gap:6px;justify-content:center;width:100%;padding:6px 0 0;margin-top:auto}
+ .dice-count-btn{background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.12);border-radius:8px;color:#8892b0;font-size:13px;font-weight:700;padding:4px 14px;cursor:pointer;transition:all 0.12s}
 .dice-count-btn.selected{background:#f5c842;border-color:#f5c842;color:#1a1a2e}
 .amount-presets{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:8px 16px 0;flex-shrink:0}
 .preset-btn{padding:1px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#8892b0;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.12s}
@@ -180,7 +180,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   const menuScreen = $('#menu-screen'), gameScreen = $('#game-screen'), countRow = $('#count-row');
   const initMoneyInput = $('#init-money'), startBtn = $('#start-btn'), exitBtn = $('#exit-btn');
   const bgmBtn = $('#bgm-btn'), playersContainer = $('#players-container'), presetsBar = $('#presets-bar');
-  const rollBtn = $('#roll-btn'), diceOverlay = $('#dice-overlay'), bigDie1 = $('#big-die1'), bigDie2 = $('#big-die2');
+  const rollBtn = $('#roll-btn'), diceOverlay = $('#dice-overlay'), bigDie1 = $('#big-die1'), bigDie2 = $('#big-die2'), bigDie3 = $('#big-die3');
   const overlayResult = $('#overlay-result'), modalOverlay = $('#modal-overlay'), modalMsg = $('#modal-msg');
   const modalCancel = $('#modal-cancel'), modalConfirm = $('#modal-confirm'), toast = $('#toast');
 
@@ -431,6 +431,16 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
   }
 
   // ── Dice Roll ──
+  const diceCountRow = $('#dice-count-row');
+  diceCountRow.addEventListener('click', e => {
+    const btn = e.target.closest('.dice-count-btn');
+    if (!btn) return;
+    e.stopPropagation();
+    state.diceCount = parseInt(btn.dataset.count);
+    diceCountRow.querySelectorAll('.dice-count-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  });
+
   rollBtn.addEventListener('click', (e) => {
     if (state.rolling) return;
     if (e.target.closest('.dice-count-btn')) return;
@@ -446,6 +456,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,Blink
     bigDie1.style.display = state.diceCount >= 1 ? '' : 'none';
     bigDie2.style.display = state.diceCount >= 2 ? '' : 'none';
     bigDie3.style.display = state.diceCount >= 3 ? '' : 'none';
+    if (state.diceCount < 2) bigDie2.innerHTML = '';
+    if (state.diceCount < 3) bigDie3.innerHTML = '';
     overlayResult.classList.remove('show');
     overlayResult.textContent = '';
 
