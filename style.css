@@ -587,41 +587,7 @@
   /* 红色 */
 }
 
-/* ✅ 右侧输入区域：横向排列 */
-/* ── Round Buttons (+ / −) ── */
-
-.btn-round {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  border: none;
-  font-size: 30px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.12s;
-  line-height: 1;
-  flex-shrink: 0;
-  /* 防止缩放时变形 */
-}
-
-.btn-round:active {
-  transform: scale(0.9);
-}
-
-.btn-minus {
-  background: rgba(231, 76, 60, 0.15);
-  color: #e74c3c;
-}
-
-.btn-plus {
-  background: rgba(46, 204, 113, 0.15);
-  color: #2ecc71;
-}
-
-/* 更改金额区域 */
+/* 右侧更改金额区域 */
 
 .change-money-container {}
 
