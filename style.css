@@ -1,0 +1,698 @@
+#menu-screen {
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #16213e 0%, #1a1a2e 60%, #0f3460 100%);
+}
+
+.screen {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.screen.active {
+  display: flex;
+}
+
+.logo-area {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.logo-icon {
+  font-size: 48px;
+  display: block;
+  line-height: 1;
+}
+
+.logo-title {
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  margin-top: 4px;
+}
+
+.logo-title text {
+  background: linear-gradient(180deg, #f5c842 0%, #e2a61b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.logo-sub {
+  font-size: 30px;
+  color: #8892b0;
+  letter-spacing: 6px;
+  margin-top: 2px;
+}
+
+.menu-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 15px 0px;
+  width: min(340px, 88vw);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.menu-label {
+  font-size: 25px;
+  color: #aab4cc;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ── Player Count Buttons ── */
+
+.player-count-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.count-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ccd6f6;
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.count-btn:active {
+  transform: scale(0.93);
+}
+
+.count-btn.selected {
+  background: #f5c842;
+  border-color: #f5c842;
+  color: #1a1a2e;
+}
+
+/* ── Money Input ── */
+
+.money-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.money-input-row label {
+  font-size: 24px;
+  color: #8892b0;
+  white-space: nowrap;
+}
+
+.money-input-row input {
+  width: 120px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f5c842;
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  font-family: inherit;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.money-input-row input:focus {
+  border-color: #f5c842;
+}
+
+/* ── Start Button ── */
+
+.start-btn {
+  width: 80%;
+  margin: 0 auto;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #f5c842 0%, #d4940a 100%);
+  color: #1a1a2e;
+  font-size: 35px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 4px 20px rgba(245, 200, 66, 0.25);
+}
+
+.start-btn:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+/* ── Game Screen ── */
+
+#game-screen {
+  background: #16213e;
+}
+
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: #ccd6f6;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.12s
+}
+
+.icon-btn:active {
+  background: rgba(255, 255, 255, 0.15)
+}
+
+/* ── Modal ── */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 300;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal-box {
+  background: #1e2a4a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 28px 24px;
+  width: min(300px, 82vw);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-msg {
+  display: flex;
+  justify-content: center;
+  font-size: 20px;
+  color: #ccd6f6;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: pre-line;
+  text-align: center;
+}
+
+.modal-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.modal-btn {
+  padding: 10px 28px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: inherit;
+}
+
+.modal-btn.cancel {
+  background: rgba(255, 255, 255, 0.08);
+  color: #8892b0;
+}
+
+.modal-btn.confirm {
+  background: linear-gradient(135deg, #f5c842 0%, #d4940a 100%);
+  color: #1a1a2e;
+}
+
+.modal-btn:active {
+  transform: scale(0.94);
+}
+
+/* ── Toast ── */
+
+.toast {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #f5c842;
+  padding: 10px 24px;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 700;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.toast.show {
+  opacity: 1;
+}
+
+/* ── Dice Area ── */
+
+.dice-area {
+  flex: 1;
+  margin-top: auto;
+  padding: 8px 30px 0;
+  /* 上:3px  左右:30px  下:0 */
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  /* 下内边距被覆盖 */
+  background: rgba(0, 0, 0, 0.3);
+  /* border-top: 1px solid rgba(255, 255, 255, 0.06); */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+
+}
+
+.dice-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  box-shadow: 0 6px 24px rgba(231, 76, 60, 0.35);
+  overflow: hidden;
+  container-type: size;
+}
+
+.roll-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 25cqh;
+  font-weight: 800;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  gap: 4px;
+}
+
+.roll-btn:active {
+  transform: scale(0.94);
+  opacity: 0.9;
+}
+
+.roll-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ── Dice Count Row ── */
+
+.dice-count-row {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  justify-content: center;
+  width: 100%;
+  padding: 8px 12px 10px;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.dice-count-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #8892b0;
+  font-size: 25px;
+  font-weight: 700;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.dice-count-btn.selected {
+  background: #f5c842;
+  border-color: #f5c842;
+  color: #1a1a2e;
+}
+
+/* ── Dice Overlay ── */
+
+.dice-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 200;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.dice-overlay.show {
+  display: flex;
+}
+
+/* 默认:2列布局(适配2/4个骰子) */
+.dice-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  justify-items: center;
+  align-items: center;
+  padding: 10px;
+}
+
+/* 1个骰子 */
+.dice-overlay.show .dice-row.layout-1 {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  grid-template-columns: none !important;
+  /* 取消Grid，用Flex居中 */
+}
+
+/* 1个骰子时放大，更醒目 */
+.dice-overlay.show .dice-row.layout-1 .big-die {
+  width: 150px;
+  height: 150px;
+}
+
+/* 3个骰子：前两个占第一行，第三个换行居中 */
+.dice-overlay.show .dice-row.layout-3 {
+  grid-template-columns: 1fr 1fr;
+  /* 保持2列 */
+}
+
+.dice-overlay.show .dice-row.layout-3 .big-die:nth-child(3) {
+  grid-column: 1 / -1;
+  /* 跨两列 */
+  justify-self: center;
+  /* 水平居中 */
+}
+
+
+/* ── Big Die ── */
+
+.big-die {
+  width: 130px;
+  height: 130px;
+  background: #fafafa;
+  border-radius: 22px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 18px;
+  gap: 4px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 -3px 6px rgba(0, 0, 0, 0.1);
+  animation: diceRoll 0.05s infinite;
+}
+
+@keyframes diceRoll {
+  0% {
+    transform: rotate(0deg) translateY(0);
+  }
+
+  25% {
+    transform: rotate(12deg) translateY(-8px);
+  }
+
+  50% {
+    transform: rotate(-10deg) translateY(4px);
+  }
+
+  75% {
+    transform: rotate(6deg) translateY(-4px);
+  }
+
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+}
+
+.big-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  margin: auto;
+}
+
+.big-dot.tl {
+  grid-area: 1 / 1;
+}
+
+.big-dot.tc {
+  grid-area: 1 / 2;
+}
+
+.big-dot.tr {
+  grid-area: 1 / 3;
+}
+
+.big-dot.ml {
+  grid-area: 2 / 1;
+}
+
+.big-dot.mc {
+  grid-area: 2 / 2;
+}
+
+.big-dot.mr {
+  grid-area: 2 / 3;
+}
+
+.big-dot.bl {
+  grid-area: 3 / 1;
+}
+
+.big-dot.bc {
+  grid-area: 3 / 2;
+}
+
+.big-dot.br {
+  grid-area: 3 / 3;
+}
+
+/* ── Overlay Result ── */
+
+.overlay-result {
+  font-size: 64px;
+  font-weight: 900;
+  color: #f5c842;
+  opacity: 0;
+  transition: opacity 0.3s;
+  min-height: 80px;
+}
+
+.overlay-result.show {
+  opacity: 1;
+}
+
+/* ── Players ── */
+/* 每个玩家卡片定位的样式 */
+.players-container {
+  flex: 0 0 auto;
+  padding: 3px 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+/* 玩家卡片样式 */
+.player-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  flex-wrap: wrap;
+}
+
+/* 左侧信息 */
+.player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.player-name {
+  text-align: center;
+  font-size: 16px;
+  color: #fff;
+}
+
+.player-money {
+  font-size: 28px;
+  font-weight: bold;
+  color: #ffd700;
+  /* 金色 */
+}
+
+.player-money.negative {
+  color: #ff4d4f;
+  /* 红色 */
+}
+
+/* ✅ 右侧输入区域：横向排列 */
+/* ── Round Buttons (+ / −) ── */
+
+.btn-round {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: none;
+  font-size: 30px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+  line-height: 1;
+  flex-shrink: 0; /* 防止缩放时变形 */
+}
+
+.btn-round:active {
+  transform: scale(0.9);
+}
+
+.btn-minus {
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+}
+
+.btn-plus {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+}
+
+/* 更改金额区域 */
+
+.change-money-container{
+  
+}
+
+.change-money-container-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 1px 6px;
+  height: 35px;
+}
+
+.amount {
+  height: 35px;
+  width: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #8892b0;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+  box-sizing: border-box; /* ✅ 确保padding不影响宽度计算 */
+  flex-shrink: 0; /* ✅ 防止被挤压 */
+}
+
+/*调整：确认按钮 & 控制区适配             */
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  /* 增加控件之间的呼吸感 */
+}
+
+/* 调整确认按钮样式，使其与新布局协调 */
+
+.btn-confirm {
+  height: 35px;
+  width: 90px;
+  background: rgba(245, 200, 66, 0.2);
+  color: #f5c842;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 0 5px;
+  padding-bottom: 3px;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 200, 66, 0.3);
+  cursor: pointer;
+  transition: all 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0
+}
+
+.btn-confirm.gray {
+  background: rgba(255, 255, 255, 0.04);
+  color: #555;
+  border-color: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.btn-confirm.show {
+  display: flex;
+}
+
+.btn-confirm:active {
+  background: rgba(245, 200, 66, 0.3);
+}

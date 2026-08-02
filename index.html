@@ -1,511 +1,95 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#1a1a2e">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>大富翁</title>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:#1a1a2e;color:#eee;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-.screen{display:none;flex-direction:column;height:100%;width:100%;position:absolute;top:0;left:0}
-.screen.active{display:flex}
-#menu-screen{align-items:center;justify-content:center;background:linear-gradient(180deg,#16213e 0%,#1a1a2e 60%,#0f3460 100%)}
-.logo-area{text-align:center;margin-bottom:8px}
-.logo-icon{font-size:64px;display:block;line-height:1}
-.logo-title{font-size:42px;font-weight:900;letter-spacing:4px;background:linear-gradient(180deg,#f5c842 0%,#e2a61b 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-top:4px}
-.logo-sub{font-size:13px;color:#8892b0;letter-spacing:6px;margin-top:2px}
-.menu-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:28px 24px;width:min(340px,88vw);display:flex;flex-direction:column;gap:20px}
-.menu-label{font-size:15px;color:#aab4cc;text-align:center;font-weight:600}
-.player-count-row{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
-.count-btn{width:46px;height:46px;border-radius:12px;border:2px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:#ccd6f6;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
-.count-btn:active{transform:scale(0.93)}
-.count-btn.selected{background:#f5c842;border-color:#f5c842;color:#1a1a2e}
-.money-input-row{display:flex;align-items:center;gap:10px;justify-content:center}
-.money-input-row label{font-size:14px;color:#8892b0;white-space:nowrap}
-.money-input-row input{width:120px;padding:10px 12px;border-radius:10px;border:2px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#f5c842;font-size:20px;font-weight:700;text-align:center;font-family:inherit;outline:none;transition:border 0.2s}
-.money-input-row input:focus{border-color:#f5c842}
-.start-btn{width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#f5c842 0%,#d4940a 100%);color:#1a1a2e;font-size:20px;font-weight:800;letter-spacing:2px;cursor:pointer;transition:all 0.15s;box-shadow:0 4px 20px rgba(245,200,66,0.25)}
-.start-btn:active{transform:scale(0.96);opacity:0.9}
-#game-screen{background:#16213e}
-.game-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));background:rgba(0,0,0,0.3);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
-.game-header .title{font-size:18px;font-weight:800;color:#f5c842;letter-spacing:2px}
-.header-btns{display:flex;gap:6px;align-items:center}
-.icon-btn{background:rgba(255,255,255,0.08);border:none;color:#ccd6f6;font-size:14px;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:4px;transition:all 0.12s}
-.icon-btn:active{background:rgba(255,255,255,0.15)}
-.icon-btn.bgm-on{color:#f5c842}
- .players-scroll{flex:0 0 auto;padding:6px 12px 0;display:flex;flex-direction:column;gap:10px}
- .player-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:3px;display:flex;align-items:center;gap:10px;flex-shrink:0;position:relative;overflow:hidden;flex-wrap:wrap}
-.player-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:0 4px 4px 0}
-.player-card.p0::before{background:#e74c3c}
-.player-card.p1::before{background:#3498db}
-.player-card.p2::before{background:#2ecc71}
-.player-card.p3::before{background:#f39c12}
-.player-card.p4::before{background:#9b59b6}
-.player-card.p5::before{background:#1abc9c}
-.player-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.player-name{font-size:14px;font-weight:700;color:#ccd6f6;cursor:pointer;padding:2px 6px;border-radius:6px;transition:background 0.15s;display:inline-block;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.player-name:hover{background:rgba(255,255,255,0.06)}
-.player-name-input{font-size:14px;font-weight:700;color:#1a1a2e;background:#f5c842;border:none;border-radius:6px;padding:2px 6px;width:110px;outline:none;font-family:inherit}
-.player-money{font-size:26px;font-weight:900;color:#f5c842;letter-spacing:1px;font-variant-numeric:tabular-nums}
-.player-money.negative{color:#e74c3c}
-.player-preview{font-size:13px;color:#8892b0;min-height:20px;margin-top:4px;text-align:center;font-weight:600}
-.player-preview.show{display:block}
-.player-preview .val{color:#2ecc71;font-weight:700}
-.player-preview .val.negative{color:#e74c3c}
-.player-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.amount-badge{height:40px;width:52px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#8892b0;background:rgba(255,255,255,0.06);border-radius:10px;text-align:center;font-weight:700;cursor:pointer;transition:background 0.15s;padding:0}
-.amount-badge:active{background:rgba(255,255,255,0.12)}
- .btn-round{width:40px;height:40px;border-radius:50%;border:none;font-size:28px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.12s;line-height:1}
-.btn-round:active{transform:scale(0.9)}
-.btn-minus{background:rgba(231,76,60,0.15);color:#e74c3c}
-.btn-plus{background:rgba(46,204,113,0.15);color:#2ecc71}
- .btn-confirm{background:rgba(245,200,66,0.2);color:#f5c842;font-size:15px;font-weight:700;padding:8px 14px;border-radius:10px;border:1px solid rgba(245,200,66,0.3);cursor:pointer;transition:all 0.12s;display:flex;align-items:center;gap:4px}.btn-confirm.gray{background:rgba(255,255,255,0.04);color:#555;border-color:rgba(255,255,255,0.05);pointer-events:none}
-.btn-confirm.show{display:flex}
-.btn-confirm:active{background:rgba(245,200,66,0.3)}
- .dice-area{flex:1;padding:3px 8px 0;padding-bottom:max(8px,env(safe-area-inset-bottom));background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;align-items:stretch;justify-content:center}
- .dice-box{flex:1;display:flex;flex-direction:column;border-radius:18px;background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);box-shadow:0 6px 24px rgba(231,76,60,0.35);overflow:hidden;container-type:size}
-   .roll-btn{flex:1;border:none;background:transparent;color:#fff;font-size:25cqh;font-weight:800;letter-spacing:2px;cursor:pointer;transition:all 0.15s;white-space:nowrap;display:flex;align-items:center;justify-content:center;line-height:1;gap:4px}
-.roll-btn:active{transform:scale(0.94);opacity:0.9}
-.roll-btn:disabled{opacity:0.4;pointer-events:none}
- .dice-count-row{display:flex;flex-direction:row;gap:8px;justify-content:center;width:100%;padding:8px 12px 10px;margin-top:auto;flex-shrink:0}
- .dice-count-btn{background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.12);border-radius:8px;color:#8892b0;font-size:13px;font-weight:700;padding:4px 14px;cursor:pointer;transition:all 0.12s}
-.dice-count-btn.selected{background:#f5c842;border-color:#f5c842;color:#1a1a2e}
-.amount-presets{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:8px 16px 0;flex-shrink:0}
- .preset-btn{padding:1px 3px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#8892b0;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.12s}
-.preset-btn:active{background:rgba(255,255,255,0.1)}
-.preset-btn.active{background:#f5c842;border-color:#f5c842;color:#1a1a2e}
 
-/* Dice overlay */
-.dice-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px}
-.dice-overlay.show{display:flex}
-.dice-row{display:flex;gap:24px;justify-content:center}
-.big-die{width:130px;height:130px;background:#fafafa;border-radius:22px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:18px;gap:4px;box-shadow:0 8px 32px rgba(0,0,0,0.4),inset 0 -3px 6px rgba(0,0,0,0.1);animation:diceRoll 0.1s infinite}
-@keyframes diceRoll{0%{transform:rotate(0deg) translateY(0)}25%{transform:rotate(12deg) translateY(-8px)}50%{transform:rotate(-10deg) translateY(4px)}75%{transform:rotate(6deg) translateY(-4px)}100%{transform:rotate(0deg) translateY(0)}}
-.big-dot{width:20px;height:20px;border-radius:50%;background:#1a1a2e;margin:auto}
-.big-dot.tl{grid-area:1/1}.big-dot.tc{grid-area:1/2}.big-dot.tr{grid-area:1/3}
-.big-dot.ml{grid-area:2/1}.big-dot.mc{grid-area:2/2}.big-dot.mr{grid-area:2/3}
-.big-dot.bl{grid-area:3/1}.big-dot.bc{grid-area:3/2}.big-dot.br{grid-area:3/3}
-.overlay-result{font-size:64px;font-weight:900;color:#f5c842;opacity:0;transition:opacity 0.3s;min-height:80px}
-.overlay-result.show{opacity:1}
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a1a2e">
+    <link rel="stylesheet" href="style.css">
+    <title>大富翁</title>
+  </head>
 
-/* Modal */
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:300;display:none;align-items:center;justify-content:center}
-.modal-overlay.show{display:flex}
-.modal-box{background:#1e2a4a;border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:28px 24px;width:min(300px,82vw);text-align:center;display:flex;flex-direction:column;gap:16px}
- .modal-msg{font-size:17px;color:#ccd6f6;font-weight:600;line-height:1.5;white-space:pre-line;text-align:center}
-.modal-btns{display:flex;gap:10px;justify-content:center}
-.modal-btn{padding:10px 28px;border-radius:12px;border:none;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.12s;font-family:inherit}
-.modal-btn.cancel{background:rgba(255,255,255,0.08);color:#8892b0}
-.modal-btn.confirm{background:linear-gradient(135deg,#f5c842 0%,#d4940a 100%);color:#1a1a2e}
-.modal-btn:active{transform:scale(0.94)}
+  <body>
 
-/* Toast */
-.toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#f5c842;padding:10px 24px;border-radius:24px;font-size:15px;font-weight:700;z-index:100;pointer-events:none;opacity:0;transition:opacity 0.25s}
-.toast.show{opacity:1}
-</style>
-</head>
-<body>
-
-<div id="menu-screen" class="screen active">
-  <div class="logo-area">
-    <span class="logo-icon">🎩</span>
-    <div class="logo-title">大富翁</div>
-    <div class="logo-sub">MONOPOLY</div></button>
-  </div>
-  <div class="menu-card">
-    <div class="menu-label">选择玩家人数</div>
-    <div class="player-count-row" id="count-row">
-      <button class="count-btn" data-count="2">2</button>
-      <button class="count-btn selected" data-count="3">3</button>
-      <button class="count-btn" data-count="4">4</button>
-      <button class="count-btn" data-count="5">5</button>
-      <button class="count-btn" data-count="6">6</button>
+    <!-- ── 菜单界面 ── -->
+    <div id="menu-screen" class="screen active">
+    <div class="logo-area">
+      <div class="logo-title">🎩<text>大富翁</text>🎩</div>
+      <div class="logo-sub">MONOPOLY</div>
     </div>
-    <div style="height:1px;background:rgba(255,255,255,0.06)"></div>
-    <div class="money-input-row">
-      <label for="init-money">初始资金</label>
-      <input type="number" id="init-money" value="15000" min="1000" max="100000" step="1000">
+    <div class="menu-card">
+      <div class="menu-label">选择玩家人数</div>
+      <div class="player-count-row" id="count-row">
+        <button class="count-btn" data-count="2">2</button>
+        <button class="count-btn selected" data-count="3">3</button>
+        <button class="count-btn" data-count="4">4</button>
+        <button class="count-btn" data-count="5">5</button>
+        <button class="count-btn" data-count="6">6</button>
+      </div>
+      <!-- <div style="height:1px;background:rgba(255,255,255,0.06)"></div> -->
+      <div class="money-input-row">
+        <label for="init-money">初始资金</label>
+        <input type="number" id="init-money" value="15000" min="1000" max="100000" step="1000">
+      </div>
+      <div class="money-input-row">
+        <label for="init-reward">起点奖励</label>
+        <input type="number" id="init-reward" value="2000" min="1000" max="10000" step="1000">
+      </div>
+      <button class="start-btn" id="start-btn">开 始 游 戏</button>
     </div>
-    <button class="start-btn" id="start-btn">开 始 游 戏</button>
-  </div>
-</div>
+  </div>  
 
-<div id="game-screen" class="screen">
-  <div class="game-header">
-    <button class="icon-btn" id="exit-btn">✕ 退出</button>
-    <span class="title">大富翁</span>
-    <button class="icon-btn" id="bgm-btn">🔇</button>
-  </div>
-  <div class="amount-presets" id="presets-bar"></div>
-  <div class="players-scroll" id="players-container"></div>
-  <div class="dice-area">
-    <div class="dice-box">
-       <button class="roll-btn" id="roll-btn">🎲 投掷</button>
-      <div class="dice-count-row" id="dice-count-row">
-        <button class="dice-count-btn selected" data-count="1">🎲×1</button>
-        <button class="dice-count-btn" data-count="2">🎲×2</button>
-        <button class="dice-count-btn" data-count="3">🎲×3</button>
+
+  <!-- ── 游戏界面 ── -->
+  <div id="game-screen" class="screen">
+    <div class="game-header">
+      <button class="icon-btn" id="exit-btn">✕ 退出</button>
+    </div>
+    <div class="players-container" id="players-container"></div>
+    <div class="dice-area">
+      <div class="dice-box">
+        <button class="roll-btn" id="roll-btn">🎲投掷</button>
+        <div class="dice-count-row" id="dice-count-row">
+          <button class="dice-count-btn" data-count="1">🎲×1</button>
+          <button class="dice-count-btn" data-count="2">🎲×2</button>
+          <button class="dice-count-btn selected" data-count="3">🎲×3</button>
+          <button class="dice-count-btn" data-count="4">🎲×4</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<div class="dice-overlay" id="dice-overlay">
-  <div class="dice-row">
-    <div class="big-die" id="big-die1"></div>
-    <div class="big-die" id="big-die2"></div>
-    <div class="big-die" id="big-die3"></div></button>
+  <!-- ── 骰子动画遮罩 ── -->
+  <div class="dice-overlay" id="dice-overlay">
+    <div class="dice-row">
+      <div class="big-die" id="big-die1"></div>
+      <div class="big-die" id="big-die2"></div>
+      <div class="big-die" id="big-die3"></div>
+      <div class="big-die" id="big-die4"></div>
+    </div>
+    <div class="overlay-result" id="overlay-result"></div>
   </div>
-  <div class="overlay-result" id="overlay-result"></div>
-</div>
 
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal-box">
-    <div class="modal-msg" id="modal-msg"></div>
-    <div class="modal-btns">
-      <button class="modal-btn cancel" id="modal-cancel">取消</button>
-      <button class="modal-btn confirm" id="modal-confirm">确定</button>
-    </div></button>
+  <!-- ── 通用弹窗 ── -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-msg" id="modal-msg"></div>
+      <div class="modal-btns">
+        <button class="modal-btn cancel" id="modal-cancel">取消</button>
+        <button class="modal-btn confirm" id="modal-confirm">确定</button>
+      </div>
+    </div>
   </div>
-</div>
 
-<div class="toast" id="toast"></div>
+  <!-- 基础公共模块：最先加载 -->
+  <script src="eventBus.js"></script>
+  <!-- 其他模块顺序随意，互不依赖 -->
+  <script src="audio.js"></script>
+  <script src="menu.js"></script>
+  <script src="game.js"></script>
 
-<script>
-(function() {
-  const state = { playerCount: 3, initMoney: 15000, selectedAmount: 200, players: [], rolling: false, pendingChanges: {}, bgmOn: false, diceCount: 1 };
-  const presetAmounts = [50, 100, 200, 500, 1000, 2000, 5000];
-  const playerNames = ['玩家一', '玩家二', '玩家三', '玩家四', '玩家五', '玩家六'];
-  const dotMap = { 1: ['mc'], 2: ['tr','bl'], 3: ['tr','mc','bl'], 4: ['tl','tr','bl','br'], 5: ['tl','tr','mc','bl','br'], 6: ['tl','tr','ml','mr','bl','br'] };
-
-  const $ = s => document.querySelector(s);
-  const $$ = s => document.querySelectorAll(s);
-  const menuScreen = $('#menu-screen'), gameScreen = $('#game-screen'), countRow = $('#count-row');
-  const initMoneyInput = $('#init-money'), startBtn = $('#start-btn'), exitBtn = $('#exit-btn');
-  const bgmBtn = $('#bgm-btn'), playersContainer = $('#players-container'), presetsBar = $('#presets-bar');
-  const rollBtn = $('#roll-btn'), diceOverlay = $('#dice-overlay'), bigDie1 = $('#big-die1'), bigDie2 = $('#big-die2'), bigDie3 = $('#big-die3');
-  const overlayResult = $('#overlay-result'), modalOverlay = $('#modal-overlay'), modalMsg = $('#modal-msg');
-  const modalCancel = $('#modal-cancel'), modalConfirm = $('#modal-confirm'), toast = $('#toast');
-
-  // ── Audio engine ──
-  let audioCtx = null;
-  function getAudioCtx() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    return audioCtx;
-  }
-
-  let bgmNodes = [];
-  function startBGM() {
-    stopBGM();
-    const ctx = getAudioCtx();
-    const now = ctx.currentTime;
-    const notes = [262, 294, 330, 349, 392, 349, 330, 294, 262, 330, 392, 440, 392, 330, 294, 262];
-    const noteLen = 0.35;
-    const totalLen = notes.length * noteLen;
-    notes.forEach((freq, i) => {
-      const start = now + i * noteLen;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.06, start);
-      gain.gain.exponentialRampToValueAtTime(0.06, start + 0.02);
-      gain.gain.setValueAtTime(0.06, start + noteLen * 0.85);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + noteLen);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(start); osc.stop(start + noteLen);
-      bgmNodes.push(osc, gain);
-    });
-    // Loop
-    bgmNodes._interval = setInterval(() => { if (state.bgmOn) startBGM(); }, totalLen * 1000);
-  }
-  function stopBGM() {
-    bgmNodes.forEach(n => { try { n.stop(); } catch(e) {} });
-    bgmNodes = [];
-    if (bgmNodes._interval) { clearInterval(bgmNodes._interval); bgmNodes._interval = null; }
-  }
-  function toggleBGM() {
-    state.bgmOn = !state.bgmOn;
-    if (state.bgmOn) { startBGM(); bgmBtn.textContent = '🔊'; bgmBtn.classList.add('bgm-on'); }
-    else { stopBGM(); bgmBtn.textContent = '🔇'; bgmBtn.classList.remove('bgm-on'); }
-  }
-
-  // ── Dice sound ──
-  function playDiceRollSound() {
-    const ctx = getAudioCtx();
-    const now = ctx.currentTime;
-    for (let i = 0; i < 6; i++) {
-      const t = now + i * 0.08;
-      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.04, ctx.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let j = 0; j < data.length; j++) data[j] = (Math.random() * 2 - 1) * 0.3;
-      const src = ctx.createBufferSource(); src.buffer = buf;
-      const g = ctx.createGain(); g.gain.setValueAtTime(0.15, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
-      const flt = ctx.createBiquadFilter(); flt.type = 'highpass'; flt.frequency.value = 2000;
-      src.connect(flt); flt.connect(g); g.connect(ctx.destination);
-      src.start(t); src.stop(t + 0.04);
-    }
-  }
-
-  function playResultSound() {
-    const ctx = getAudioCtx();
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    osc.type = 'sine'; osc.frequency.setValueAtTime(660, now); osc.frequency.setValueAtTime(880, now + 0.08);
-    g.gain.setValueAtTime(0.12, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-    osc.connect(g); g.connect(ctx.destination);
-    osc.start(now); osc.stop(now + 0.3);
-  }
-
-  // ── Generic modal ──
-  let modalResolve = null;
-  function showModal(msg) {
-    return new Promise(resolve => {
-      modalMsg.textContent = msg;
-      modalOverlay.classList.add('show');
-      modalResolve = resolve;
-    });
-  }
-  modalConfirm.addEventListener('click', () => { modalOverlay.classList.remove('show'); if (modalResolve) modalResolve(true); });
-  modalCancel.addEventListener('click', () => { modalOverlay.classList.remove('show'); if (modalResolve) modalResolve(false); });
-
-  // ── Toast ──
-  let toastTimer;
-  function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 1500); }
-
-  // ── Render big die ──
-  function renderBigDie(el, value) {
-    el.innerHTML = '';
-    const dots = dotMap[value] || [];
-    ['tl','tc','tr','ml','mc','mr','bl','bc','br'].forEach(pos => {
-      const cell = document.createElement('div');
-      if (dots.includes(pos)) cell.className = 'big-dot ' + pos;
-      el.appendChild(cell);
-    });
-  }
-
-  // ── Menu ──
-  countRow.addEventListener('click', e => {
-    const btn = e.target.closest('.count-btn'); if (!btn) return;
-    $$('.count-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected'); state.playerCount = parseInt(btn.dataset.count);
-  });
-  initMoneyInput.addEventListener('input', () => { let v = parseInt(initMoneyInput.value) || 15000; if (v < 500) v = 500; state.initMoney = v; });
-
-  startBtn.addEventListener('click', () => {
-    state.initMoney = parseInt(initMoneyInput.value) || 15000;
-    if (state.initMoney < 500) state.initMoney = 500;
-    initGame(); switchScreen('game');
-  });
-
-  exitBtn.addEventListener('click', async () => {
-    const ok = await showModal('确定退出当前游戏吗？\n游戏进度不会保存');
-    if (ok) { stopBGM(); state.bgmOn = false; bgmBtn.textContent = '🔇'; bgmBtn.classList.remove('bgm-on'); switchScreen('menu'); }
-  });
-
-  bgmBtn.addEventListener('click', toggleBGM);
-
-  function switchScreen(name) {
-    if (name === 'menu') { gameScreen.classList.remove('active'); menuScreen.classList.add('active'); }
-    else { menuScreen.classList.remove('active'); gameScreen.classList.add('active'); }
-  }
-
-  // ── Init Game ──
-  function initGame() {
-    state.players = [];
-    for (let i = 0; i < state.playerCount; i++) {
-      state.players.push({ id: i, name: playerNames[i], money: state.initMoney });
-    }
-    state.selectedAmount = 200; state.pendingChanges = {};
-    renderPresets(); renderPlayers();
-  }
-
-  function renderPresets() {
-     presetsBar.innerHTML = presetAmounts.map(a => '<button class="preset-btn' + (a === state.selectedAmount ? ' active' : '') + '" data-amount="' + a + '">￥' + a + '</button>').join('');
-  }
-  presetsBar.addEventListener('click', e => {
-    const btn = e.target.closest('.preset-btn'); if (!btn) return;
-    state.selectedAmount = parseInt(btn.dataset.amount); renderPresets();
-    state.players.forEach((_, i) => updatePlayerCard(i));
-  });
-
-  // ── Render Players ──
-  function renderPlayers() {
-    playersContainer.innerHTML = state.players.map((p, i) => {
-      const pc = state.pendingChanges[i];
-      const delta = pc != null ? pc - p.money : 0;
-      return '<div class="player-card p' + i + '">' +
-        '<div class="player-main">' +
-          '<span class="player-name" data-action="edit-name" data-idx="' + i + '">' + escHtml(p.name) + '</span>' +
-           '<div class="player-money' + (p.money < 0 ? ' negative' : '') + '">￥' + p.money.toLocaleString() + '</div>' +
-        '</div>' +
-           '<div class="player-preview' + (pc != null ? ' show' : '') + '"><span class="val' + (delta < 0 ? ' negative' : '') + '">' + (delta > 0 ? '+￥' : '￥') + (pc != null ? delta.toLocaleString() : '0') + '</span></div>' +
-        '<div class="player-actions">' +
-          '<button class="btn-round btn-minus" data-action="sub" data-idx="' + i + '">−</button>' +
-           '<div class="amount-badge" data-action="cycle" data-idx="' + i + '">￥' + state.selectedAmount + '</div>' +
-          '<button class="btn-round btn-plus" data-action="add" data-idx="' + i + '">+</button>' +
-        '</div>' +
-        '<button class="btn-confirm' + (pc == null || pc === p.money ? ' gray' : '') + '" data-action="confirm-change" data-idx="' + i + '">确定</button>' +
-      '</div>';
-    }).join('');
-  }
-
-  function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-  function updatePlayerCard(idx) {
-    const p = state.players[idx];
-    const card = playersContainer.querySelectorAll('.player-card')[idx]; if (!card) return;
-    const pc = state.pendingChanges[idx];
-    const delta = pc != null ? pc - p.money : 0;
-    card.querySelector('.player-name').textContent = p.name;
-    const moneyEl = card.querySelector('.player-money');
-     moneyEl.textContent = '￥' + p.money.toLocaleString();
-    moneyEl.classList.toggle('negative', p.money < 0);
-     card.querySelector('.amount-badge').textContent = '￥' + state.selectedAmount;
-    const previewEl = card.querySelector('.player-preview');
-    const valEl = previewEl.querySelector('.val');
-    const confirmBtn = card.querySelector('.btn-confirm');
-    if (pc != null) {
-      previewEl.classList.add('show');
-       valEl.textContent = (delta > 0 ? '+￥' : '￥') + delta.toLocaleString();
-      valEl.classList.toggle('negative', delta < 0);
-      confirmBtn.classList.toggle('gray', delta === 0);
-    } else {
-      previewEl.classList.remove('show');
-      confirmBtn.classList.add('gray');
-    }
-  }
-
-  // ── Player card click handler ──
-  playersContainer.addEventListener('click', async e => {
-    const actionBtn = e.target.closest('[data-action]');
-    if (!actionBtn) return;
-    const idx = parseInt(actionBtn.dataset.idx);
-    const action = actionBtn.dataset.action;
-
-    if (action === 'add' || action === 'sub') {
-      const delta = action === 'add' ? state.selectedAmount : -state.selectedAmount;
-      const current = state.pendingChanges[idx] != null ? state.pendingChanges[idx] : state.players[idx].money;
-      state.pendingChanges[idx] = current + delta;
-      updatePlayerCard(idx);
-    } else if (action === 'confirm-change') {
-      const pc = state.pendingChanges[idx];
-      if (pc == null) return;
-      state.players[idx].money = pc;
-      state.pendingChanges[idx] = state.players[idx].money;
-      updatePlayerCard(idx);
-    } else if (action === 'cycle') {
-      const curIdx = presetAmounts.indexOf(state.selectedAmount);
-      state.selectedAmount = presetAmounts[(curIdx + 1) % presetAmounts.length];
-      renderPresets();
-      state.players.forEach((_, i) => updatePlayerCard(i));
-    } else if (action === 'edit-name') {
-      startNameEdit(idx);
-    }
-  });
-
-  // ── Inline name editing ──
-  function startNameEdit(idx) {
-    const card = playersContainer.querySelectorAll('.player-card')[idx];
-    if (!card) return;
-    const nameEl = card.querySelector('.player-name');
-    const input = document.createElement('input');
-    input.className = 'player-name-input';
-    input.value = state.players[idx].name;
-    input.maxLength = 8;
-    nameEl.replaceWith(input);
-    input.focus(); input.select();
-    const finish = () => {
-      const v = input.value.trim();
-      if (v) state.players[idx].name = v;
-      const span = document.createElement('span');
-      span.className = 'player-name';
-      span.setAttribute('data-action','edit-name');
-      span.setAttribute('data-idx',idx);
-      span.textContent = state.players[idx].name;
-      input.replaceWith(span);
-      updatePlayerCard(idx);
-    };
-    input.addEventListener('blur', finish);
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') { input.blur(); } });
-  }
-
-  // ── Dice Roll ──
-  const diceCountRow = $('#dice-count-row');
-  diceCountRow.addEventListener('click', e => {
-    const btn = e.target.closest('.dice-count-btn');
-    if (!btn) return;
-    e.stopPropagation();
-    state.diceCount = parseInt(btn.dataset.count);
-    diceCountRow.querySelectorAll('.dice-count-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-  });
-
-  rollBtn.addEventListener('click', (e) => {
-    if (state.rolling) return;
-    if (e.target.closest('.dice-count-btn')) return;
-    state.rolling = true;
-    rollBtn.disabled = true;
-    getAudioCtx(); // unlock audio on iOS
-    playDiceRollSound();
-
-    diceOverlay.classList.add('show');
-    bigDie1.style.animation = '';
-    bigDie2.style.animation = '';
-    bigDie3.style.animation = '';
-    bigDie1.style.display = state.diceCount >= 1 ? '' : 'none';
-    bigDie2.style.display = state.diceCount >= 2 ? '' : 'none';
-    bigDie3.style.display = state.diceCount >= 3 ? '' : 'none';
-    if (state.diceCount < 2) bigDie2.innerHTML = '';
-    if (state.diceCount < 3) bigDie3.innerHTML = '';
-    overlayResult.classList.remove('show');
-    overlayResult.textContent = '';
-
-    let ticks = 0;
-    const totalTicks = 12;
-    const interval = setInterval(() => {
-      for (let d = 0; d < state.diceCount; d++) { const v = Math.floor(Math.random() * 6) + 1; renderBigDie([bigDie1,bigDie2,bigDie3][d], v); }
-      ticks++;
-      if (ticks >= totalTicks) {
-        clearInterval(interval);
-        const diceEls = [bigDie1,bigDie2,bigDie3]; let sum = 0; const results = [];
-        for (let d = 0; d < state.diceCount; d++) { const v = Math.floor(Math.random() * 6) + 1; results.push(v); sum += v; renderBigDie(diceEls[d], v); diceEls[d].style.animation = 'none'; } bigDie1.style.animation = 'none'; bigDie2.style.animation = 'none'; bigDie3.style.animation = 'none';
-        overlayResult.textContent = results.join(' + ') + ' = ' + sum;
-        overlayResult.classList.add('show');
-        playResultSound();
-        setTimeout(() => {
-          diceOverlay.classList.remove('show');
-          state.rolling = false;
-          rollBtn.disabled = false;
-        }, 1800);
-      }
-    }, 90);
-  });
-
-  initMoneyInput.value = state.initMoney;
-
-  if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').then(reg => {
-    reg.addEventListener('updatefound', () => {
-      const newSW = reg.installing;
-      newSW.addEventListener('statechange', () => {
-        if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-          showToast('🔄 新版本已就绪，即将刷新...');
-          setTimeout(() => location.reload(), 800);
-        }
-      });
-    });
-  });
-}
-})();
-</script>
-</body>
+  </body>
 </html>
