@@ -546,6 +546,7 @@
   flex-direction: column;
   gap: 10px;
 }
+
 /* 玩家卡片样式 */
 .player-card {
   background: rgba(255, 255, 255, 0.05);
@@ -570,7 +571,7 @@
 
 .player-name {
   text-align: center;
-  font-size: 16px;
+  font-size: 18px;
   color: #fff;
 }
 
@@ -602,7 +603,8 @@
   justify-content: center;
   transition: all 0.12s;
   line-height: 1;
-  flex-shrink: 0; /* 防止缩放时变形 */
+  flex-shrink: 0;
+  /* 防止缩放时变形 */
 }
 
 .btn-round:active {
@@ -621,16 +623,14 @@
 
 /* 更改金额区域 */
 
-.change-money-container{
-  
-}
+.change-money-container {}
 
 .change-money-container-inner {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  margin: 1px 6px;
-  height: 35px;
 }
 
 .amount {
@@ -640,24 +640,50 @@
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  color: #8892b0;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  text-align: center;
   font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s;
-  padding: 0;
-  box-sizing: border-box; /* ✅ 确保padding不影响宽度计算 */
-  flex-shrink: 0; /* ✅ 防止被挤压 */
+  text-align: center;
+  border: none;
+  outline: none;
+  border-radius: 8px;
+  font-family: inherit;
+  /* 继承页面字体 */
+  box-sizing: border-box;
+  transition: background 0.15s, color 0.15s;
+  padding: 0 5px;
+  cursor: text;
+  /* ✅ 光标变成"I"形，提示可输入 */
+  -moz-appearance: textfield;
+  /* Firefox 隐藏箭头 */
 }
 
-/*调整：确认按钮 & 控制区适配             */
-.player-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  /* 增加控件之间的呼吸感 */
+/* Chrome/Safari/Edge 隐藏上下箭头 */
+.amount::-webkit-outer-spin-button,
+.amount::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* 默认状态（0 / 未输入） */
+.amount {
+  color: #8892b0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ✅ 正数 → 绿色 */
+.amount.positive {
+  color: #2ecc71;
+  background: rgba(46, 204, 113, 0.08);
+}
+
+/* ✅ 负数 → 红色 */
+.amount.negative {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.08);
+}
+
+/* 聚焦时高亮边框 */
+.amount:focus {
+  box-shadow: 0 0 0 2px rgba(245, 200, 66, 0.3);
 }
 
 /* 调整确认按钮样式，使其与新布局协调 */
@@ -694,5 +720,5 @@
 }
 
 .btn-confirm:active {
-  background: rgba(245, 200, 66, 0.3);
+  transform: scale(0.9);
 }

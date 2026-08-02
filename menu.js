@@ -7,14 +7,15 @@
   // 状态只存在自己模块内，不暴露给全局（需要的话通过request事件获取）
   const state = {
     playerCount: 3,
-    initMoney: 15000,
-    initReward: 2000,
     players: [],
     rolling: false,
     pendingChanges: {}, // 待变化的金额,点确定之后,清零
     diceCount: 3,
     position: 0
   };
+
+  const  initMoney = 15000;
+  const  initReward = 2000;
 
   EventBus.respondTo('CMD_REQ_GET_STATE', () => {
     // 建议深拷贝，避免外部修改影响内部state（关键！）
@@ -66,9 +67,9 @@
     state.players = [];
     state.pendingChanges = {};
 
-    state.initMoney = parseInt(initMoneyInput.value) || 15000;
+    state.initMoney = parseInt(initMoneyInput.value) || initMoney;
     if (state.initMoney < 1000) state.initMoney = 1000;
-    state.initReward = parseInt(initRewardInput.value) || 2000;
+    state.initReward = parseInt(initRewardInput.value) || initReward;
     if (state.initReward < 1000) state.initReward = 1000;
 
     for (let i = 0; i < state.playerCount; i++) {
@@ -81,10 +82,26 @@
     }
     // 切换到game界面
     EventBus.emit('CMD_NOTIFY_SWITCH_SCREEN', 'game');
-
     // 渲染玩家卡片
     EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
+  });
 
+  // ✅ 确认修改：将待修改金额应用到真实资金
+  EventBus.on('CMD_NOTIFY_CONFIRM_CHANGE', ({ idx, pending }) => {
+      // 1. 校验
+      if (!state.players[idx] || pending === 0) return;
+
+      // 2. ✅ 核心修复：使用 Math.round 防止精度Bug，确保是整数
+      const oldMoney = state.players[idx].money;
+      state.players[idx].money = Math.round(oldMoney + pending);
+      
+      // 3. 重置待修改项
+      state.pendingChanges[idx] = 0;
+      
+      console.log(`[Menu] 记账成功：玩家${idx} 原金额 ${oldMoney} + 变动 ${pending} = 新金额 ${state.players[idx].money}`);
+      
+      // 4. 通知刷新（这一步你之前是对的，只要确保 game.js 收到后能重绘就行）
+      EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
   });
 
 })(window);

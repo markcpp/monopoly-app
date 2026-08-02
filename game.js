@@ -35,13 +35,36 @@
 
     const playersContainer = $('#players-container');
 
-    // ── Toast ──
-    let toastTimer;
-    function showToast(msg) {
-        toast.textContent = msg;
-        toast.classList.add('show');
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => toast.classList.remove('show'), 1500);
+   
+    // 数字转显示格式：正数→￥X，负数→-￥X，0→￥0
+    function formatAmount(num) {
+        const n = Number(num) || 0;
+        if (n === 0) return '￥0';
+        if (n > 0) return `￥${n}`;
+        return `-￥${Math.abs(n)}`; // 负数格式：-￥200（符合你的要求）
+    }
+
+    // 显示格式转数字：去掉￥/-，转成纯数字
+    function parseAmount(str) {
+        const cleaned = str.replace(/[￥\-]/g, '');
+        const num = parseInt(cleaned) || 0;
+        return str.startsWith('-') ? -num : num;
+    }
+
+    // 把输入内容转成合法的纯数字字符串（带符号）
+    function getPureNumber(raw) {
+        // 1. 只保留数字和第一个负号
+        let cleaned = raw.replace(/[^0-9-]/g, '');
+        const negCount = (cleaned.match(/-/g) || []).length;
+        if (negCount > 1) cleaned = '-' + cleaned.replace(/-/g, ''); // 多个负号只留第一个
+        
+        // 2. 处理前导零和单独的负号
+        if (cleaned === '-') return '-0'; // 只输入负号时显示-0
+        if (cleaned === '-0') return '-0'; // 保留-0状态
+        cleaned = cleaned.replace(/^0+/, ''); // 去掉前导零（002→2）
+        cleaned = cleaned.replace(/^-0+/, '-'); // 去掉负数的前导零（-002→-2）
+        
+        return cleaned || '0'; // 空内容返回0
     }
 
     exitBtn.addEventListener('click', async () => {
@@ -186,33 +209,7 @@
         }
         
         playersContainer.innerHTML = state.players.map((p, i) => {
-            const pc = state.pendingChanges?.[i];        // 待确认金额
-            const delta = pc != null ? pc - p.money : 0; // 变更差额
-            const displayAmount = pc ?? p.money;         // 显示金额：待确认优先，否则当前金额
-            
-            // return `
-            //     <div class="player-card p${i}">
-            //         <div class="player-main">
-            //             <span class="player-name" data-action="edit-name" data-idx="${i}">
-            //                 ${escHtml(p.name)}
-            //             </span>
-            //             <div class="player-money ${p.money < 0 ? 'negative' : ''}">
-            //                 ￥${p.money.toLocaleString()}
-            //             </div>
-            //         </div>
-            //         <div class="player-actions">
-            //             <button class="btn-round btn-minus" data-action="sub" data-idx="${i}">−</button>
-            //             <div class="amount-badge" data-action="cycle" data-idx="${i}">
-            //                 ￥${displayAmount.toLocaleString()}
-            //             </div>
-            //             <button class="btn-round btn-plus" data-action="add" data-idx="${i}">+</button>
-            //         </div>
-            //         <button class="btn-confirm ${pc == null || pc === p.money ? 'gray' : ''}"
-            //             data-action="confirm-change" data-idx="${i}">
-            //             确定
-            //         </button>
-            //     </div>
-            // `;
+            const pc = state.pendingChanges[i];        // 待修改金额
             return `
                 <div class="player-card p${i}">
                     <!-- 左侧：玩家信息 -->
@@ -220,22 +217,23 @@
                         <span class="player-name" data-action="edit-name" data-idx="${i}">
                             ${escHtml(p.name)}
                         </span>
-                        <div class="player-money ${p.money < 0 ? 'negative' : ''}">
+                        <div class="player-money">
                             ￥${p.money.toLocaleString()}
                         </div>
                     </div>
 
                     <div class="change-money-container">
                         <div class="change-money-container-inner">
-                            <button class="btn-round btn-plus" data-action="add" data-idx="${i}">+</button>
-                            <div class="amount" data-idx="${i}">
-                                ￥${displayAmount.toLocaleString()}
-                            </div>
-                        </div>
-
-                        <div class="change-money-container-inner">
-                            <button class="btn-round btn-minus" data-action="sub" data-idx="${i}">−</button>
-                            <button class="btn-confirm" data-action="confirm-change" data-idx="${i}">
+                            <input 
+                                type="text"
+                                inputmode="tel"
+                                class="amount ${pc > 0 ? 'positive' : pc < 0 ? 'negative' : ''}" 
+                                data-action="edit-amount"
+                                data-idx="${i}"
+                                value="${formatAmount(pc)}"
+                                placeholder="￥0"
+                            >
+                            <button class="btn-confirm ${pc === 0 ? 'gray' : ''}" data-action="confirm-change" data-idx="${i}">
                                 确  定
                             </button>
                         </div>
@@ -247,47 +245,212 @@
                     </div>
                 </div>
             `;
-
         }).join('');
     }
 
     // 3. 更新缓存并渲染：负责数据获取，只碰EventBus.call
     async function updateCacheAndRender() {
+        playersContainer.style.opacity = '0.7'; // 轻微置灰表示加载中
         try {
             const latestState = await EventBus.call('CMD_REQ_GET_STATE');
-            if (!latestState) {
-                console.warn('⚠️ 获取游戏状态失败，使用缓存');
-                if (cachedState) syncRender(cachedState);
-                return;
-            }
-            
-            // 深拷贝缓存，避免引用污染
+            if (latestState) {
             cachedState = JSON.parse(JSON.stringify(latestState));
             syncRender(cachedState);
-            
-        } catch (err) {
-            console.error('❌ 更新游戏状态失败:', err);
-            // 降级：用旧缓存渲染，避免界面空白
-            if (cachedState) syncRender(cachedState);
+            }
+        } finally {
+            playersContainer.style.opacity = '1'; // 恢复显示
         }
     }
 
-    // 4. 对外渲染接口：有缓存直接用，没缓存才请求
-    function renderPlayers() {
-        if (cachedState)    syncRender(cachedState);  // 同步渲染，无延迟
-        else                updateCacheAndRender();   // 首次加载，需要请求
-    }
+    
 
-    // 5. 监听数据更新通知：数据变了才重新请求
-    EventBus.on('CMD_NOTIFY_STATE_UPDATED', renderPlayers);
+    // 4. 监听数据更新通知：数据变了才重新请求
+    let updateTimer = null;
+    EventBus.on('CMD_NOTIFY_STATE_UPDATED', () => {
+        clearTimeout(updateTimer);
+        updateTimer = setTimeout(updateCacheAndRender, 50); // 50ms内只执行一次
+    });
 
-    // 6. 可选：监听金额档位变化，只更新缓存不重新请求
-    // EventBus.on('CMD_NOTIFY_AMOUNT_CHANGED', (newAmount) => {
-    //     if (cachedState) {
-    //         cachedState.selectedAmount = newAmount;
-    //         syncRender(cachedState);
-    //     }
-    // });
+    // ── 玩家卡片区域事件委托 ──
+    // 1. 聚焦时：显示纯数字，方便编辑（去掉￥）
+    playersContainer.addEventListener('focusin', (e) => {
+        if (e.target.classList.contains('amount')) {
+            const input = e.target;
+            const idx = parseInt(input.dataset.idx);
+            const num = parseAmount(input.value) || 0;
+            
+            // ✅ 关键修改：聚焦时显示纯数字（不带￥），方便编辑
+            // 即使是0也显示"0"，而不是"￥0"
+            input.value = num.toString();
+            input.select(); // 全选，方便直接覆盖输入
+
+            // 同步更新按钮状态
+            const confirmBtn = playersContainer.querySelector(`.btn-confirm[data-idx="${idx}"]`);
+            if (confirmBtn) {
+                if (num === 0) {
+                    confirmBtn.classList.add('gray');
+                    confirmBtn.disabled = true;
+                } else {
+                    confirmBtn.classList.remove('gray');
+                    confirmBtn.disabled = false;
+                }
+            }
+        }
+    });
+
+    // 2. 输入时：实时过滤非法字符 + 格式化显示 + 更新pendingChanges
+    playersContainer.addEventListener('input', (e) => {
+        if (e.target.classList.contains('amount')) {
+            const input = e.target;
+            const idx = parseInt(input.dataset.idx);
+
+            // 1. 洗成纯数字字符串
+            const pure = getPureNumber(input.value);
+            const num = parseInt(pure) || 0;
+
+            // 2. 更新pendingChanges+按钮状态
+            EventBus.emit('CMD_NOTIFY_UPDATE_PENDING', { idx, money: num });
+            const confirmBtn = playersContainer.querySelector(`.btn-confirm[data-idx="${idx}"]`);
+            if (confirmBtn) {
+                confirmBtn.classList.toggle('gray', num === 0);
+                confirmBtn.disabled = num === 0;
+            }
+
+            // 3. 更新金额颜色
+            input.classList.toggle('positive', num > 0);
+            input.classList.toggle('negative', num < 0);
+
+            // 4. 格式化显示+定位光标（核心：光标永远在数字最后面）
+            input.value = formatAmount(num);
+            const digitLen = Math.abs(num).toString().length; // 数字部分长度
+            const cursorPos = 1 + digitLen; // ￥占1位，所以光标在数字最后
+            input.setSelectionRange(cursorPos, cursorPos);
+        }
+    });
+
+    // 3. 失焦时：如果为空，重置为￥0
+    playersContainer.addEventListener('focusin', (e) => {
+        if (e.target.classList.contains('amount')) {
+            const input = e.target;
+            const idx = parseInt(input.dataset.idx);
+            const num = parseAmount(input.value) || 0;
+            input.value = num.toString(); // 去掉￥，显示纯数字
+            input.select(); // 全选，方便直接覆盖
+
+            // 同步按钮状态
+            const confirmBtn = playersContainer.querySelector(`.btn-confirm[data-idx="${idx}"]`);
+            if (confirmBtn) {
+                confirmBtn.classList.toggle('gray', num === 0);
+                confirmBtn.disabled = num === 0;
+            }
+        }
+    });
+
+    // 失焦时：格式化显示，兜底状态
+    playersContainer.addEventListener('focusout', (e) => {
+        if (e.target.classList.contains('amount')) {
+            const input = e.target;
+            const idx = parseInt(input.dataset.idx);
+            const num = parseAmount(input.value) || 0;
+            input.value = formatAmount(num); // 加￥格式化
+
+            // 同步按钮状态
+            const confirmBtn = playersContainer.querySelector(`.btn-confirm[data-idx="${idx}"]`);
+            if (confirmBtn) {
+                confirmBtn.classList.toggle('gray', num === 0);
+                confirmBtn.disabled = num === 0;
+            }
+        }
+    });
+
+    // 4. 点击确定按钮：应用金额到总金额
+    playersContainer.addEventListener('click', (e) => {
+        if (e.target.dataset.action === 'confirm-change') {
+            const idx = parseInt(e.target.dataset.idx);
+            const input = playersContainer.querySelector(`.amount[data-idx="${idx}"]`);
+            const pending = parseAmount(input?.value) || 0;
+            
+            if (pending !== 0) {
+                EventBus.emit('CMD_NOTIFY_CONFIRM_CHANGE', { idx, pending });
+                input?.blur();
+            }
+        }
+    });
+
+    // 5. 按Enter键快速确认
+    playersContainer.addEventListener('keydown', (e) => {
+        if (e.target.classList.contains('amount') && e.key === '-') {
+            e.preventDefault();
+            const input = e.target;
+            const idx = parseInt(input.dataset.idx);
+            const currentNum = parseAmount(input.value);
+            const newNum = currentNum === 0 ? -0 : -currentNum;
+
+            // 更新状态
+            EventBus.emit('CMD_NOTIFY_UPDATE_PENDING', { idx, money: newNum });
+            const confirmBtn = playersContainer.querySelector(`.btn-confirm[data-idx="${idx}"]`);
+            if (confirmBtn) {
+                confirmBtn.classList.toggle('gray', newNum === 0);
+                confirmBtn.disabled = newNum === 0;
+            }
+            input.classList.toggle('positive', newNum > 0);
+            input.classList.toggle('negative', newNum < 0);
+
+            // ✅ 关键修改：根据正负号动态计算光标位置
+            const formatted = formatAmount(newNum);
+            input.value = formatted;
+            
+            // 正数：￥200 → 前缀长度1，光标在1+3=4
+            // 负数：-￥200 → 前缀长度2，光标在2+3=5
+            const prefixLen = newNum >= 0 ? 1 : 2; // ￥占1位，-￥占2位
+            const digitLen = Math.abs(newNum).toString().length;
+            const cursorPos = prefixLen + digitLen; // 光标在数字末尾
+            
+            input.setSelectionRange(cursorPos, cursorPos);
+        }
+
+        // 原有Enter确认逻辑保留
+        if (e.target.classList.contains('amount') && e.key === 'Enter') {
+            e.target.blur();
+            const idx = parseInt(e.target.dataset.idx);
+            const pending = parseAmount(e.target.value) || 0;
+            if (pending !== 0) {
+                EventBus.emit('CMD_NOTIFY_CONFIRM_CHANGE', { idx, pending });
+            }
+        }
+    });
+
+    // game.js → 替换 input 事件里的光标计算部分
+    playersContainer.addEventListener('input', (e) => {
+        if (e.target.classList.contains('amount')) {
+            const input = e.target;
+            const idx = parseInt(input.dataset.idx);
+            const pure = getPureNumber(input.value);
+            const num = parseInt(pure) || 0;
+
+            // 更新状态
+            EventBus.emit('CMD_NOTIFY_UPDATE_PENDING', { idx, money: num });
+            const confirmBtn = playersContainer.querySelector(`.btn-confirm[data-idx="${idx}"]`);
+            if (confirmBtn) {
+                confirmBtn.classList.toggle('gray', num === 0);
+                confirmBtn.disabled = num === 0;
+            }
+            input.classList.toggle('positive', num > 0);
+            input.classList.toggle('negative', num < 0);
+
+            // ✅ 关键修改：根据正负号动态计算光标位置
+            const formatted = formatAmount(num);
+            input.value = formatted;
+            
+            // 正数：￥200 → 前缀长度1，光标在1+3=4
+            // 负数：-￥200 → 前缀长度2，光标在2+3=5
+            const prefixLen = num >= 0 ? 1 : 2; // ￥占1位，-￥占2位
+            const digitLen = Math.abs(num).toString().length;
+            const cursorPos = prefixLen + digitLen; // 光标在数字末尾
+            
+            input.setSelectionRange(cursorPos, cursorPos);
+        }
+    });
 
 })(window);
 
