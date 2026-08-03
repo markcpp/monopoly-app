@@ -388,9 +388,6 @@
             input.type = 'text';
             input.inputMode = 'text';
             input.value = oldName;
-            input.style.width = getComputedStyle(span).width;
-            //实际去看,输入状态下会左偏移1px,用于对齐
-            input.style.marginLeft = `calc(${spanStyle.marginLeft} + 1px)`;
             input.className = 'player-name-input'; // 加个类名方便写样式
             input.dataset.idx = idx;
             input.dataset.oldName = oldName; // 存旧名字，用于取消修改
