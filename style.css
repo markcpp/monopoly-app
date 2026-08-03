@@ -575,11 +575,49 @@
   color: #fff;
 }
 
+.player-name-input {
+    box-sizing: border-box; 
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace; 
+    /* ✅ 核心：和原文字完全一致的样式 */
+    height: 24px;
+    line-height: 24px;          /* 和height一致，垂直居中 */
+    font-size: 18px;            /* 和原文字同字号 */
+    font-weight: normal;        /* 和原文字同粗细 */
+    font-family: inherit;       /* 继承全局字体 */
+    color: #fff;                /* 和原文字同颜色 */
+    text-align: center;         /* ✅ 关键：水平居中！ */
+    letter-spacing: normal;     /* 和原文字同字间距 */
+    
+    /* ✅ 外观：模仿原span，不突兀 */
+    padding: 0 8px;
+    border: 1px solid rgba(245, 200, 66, 0.3);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    outline: none;
+    box-sizing: border-box;
+    
+    /* ✅ 防撑破：限制最大宽度，超出显示省略号 */
+    max-width: 120px;           /* 和原名字区域同宽 */
+    min-width: 60px;            /* 最小宽度，避免太窄 */
+    overflow: hidden;
+    text-overflow: ellipsis;     /* 超出显示... */
+    white-space: nowrap;        /* 不换行 */
+    
+    /* ✅ 聚焦时高亮，提示可编辑 */
+    transition: all 0.15s;
+}
+
+.player-name-input:focus {
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 2px rgba(245, 200, 66, 0.2);
+}
+
 .player-money {
+  width: 125px; 
   font-size: 28px;
   font-weight: bold;
   color: #ffd700;
-  /* 金色 */
+  text-align: center;
 }
 
 .player-money.negative {
@@ -617,9 +655,7 @@
   transition: background 0.15s, color 0.15s;
   padding: 0 5px;
   cursor: text;
-  /* ✅ 光标变成"I"形，提示可输入 */
   -moz-appearance: textfield;
-  /* Firefox 隐藏箭头 */
 }
 
 /* Chrome/Safari/Edge 隐藏上下箭头 */

@@ -365,8 +365,9 @@
 
     // 4. 点击确定按钮：应用金额到总金额
     playersContainer.addEventListener('click', (e) => {
-        if (e.target.dataset.action === 'confirm-change') {
-            const idx = parseInt(e.target.dataset.idx);
+        const action = e.target.dataset.action;
+        const idx = parseInt(e.target.dataset.idx);
+        if (action === 'confirm-change') {
             const input = playersContainer.querySelector(`.amount[data-idx="${idx}"]`);
             const pending = parseAmount(input?.value) || 0;
             
@@ -374,6 +375,67 @@
                 EventBus.emit('CMD_NOTIFY_CONFIRM_CHANGE', { idx, pending });
                 input?.blur();
             }
+        }
+        // 修改玩家名字
+        if (e.target.dataset.action === 'edit-name') {
+            const span = e.target;
+            const idx = parseInt(span.dataset.idx);
+            const oldName = span.textContent.trim();
+
+            // 把 span 替换成 input 输入框
+            const spanStyle = window.getComputedStyle(span);
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.inputMode = 'text';
+            input.value = oldName;
+            input.style.width = getComputedStyle(span).width;
+            //实际去看,输入状态下会左偏移1px,用于对齐
+            input.style.marginLeft = `calc(${spanStyle.marginLeft} + 1px)`;
+            input.className = 'player-name-input'; // 加个类名方便写样式
+            input.dataset.idx = idx;
+            input.dataset.oldName = oldName; // 存旧名字，用于取消修改
+
+            // 替换 span 为 input，自动聚焦全选
+            span.parentNode.replaceChild(input, span);
+            input.focus();
+            input.select();
+
+            // ✅ 2. 保存名字的逻辑
+            const saveName = () => {
+                const newName = input.value.trim().slice(0, 6);
+                const finalName = newName || oldName; // 空名字恢复旧名
+                const targetIdx = parseInt(input.dataset.idx);
+
+                // 名字没变化就不发通知
+                if (finalName !== oldName) {
+                    // 通知 menu 更新名字（用你熟悉的 CMD_NOTIFY_ 前缀）
+                    EventBus.emit('CMD_NOTIFY_UPDATE_PLAYER_NAME', {
+                        idx: targetIdx,
+                        name: escHtml(finalName) // 转义防注入
+                    });
+                }
+
+                // 把 input 换回 span
+                const newSpan = document.createElement('span');
+                newSpan.className = 'player-name';
+                newSpan.dataset.action = 'edit-name';
+                newSpan.dataset.idx = targetIdx;
+                newSpan.textContent = finalName;
+                input.parentNode.replaceChild(newSpan, input);
+            };
+
+            // ✅ 3. 绑定输入完成事件
+            input.addEventListener('blur', saveName); // 失去焦点保存
+            input.addEventListener('keydown', (ke) => {
+                if (ke.key === 'Enter') { // 按回车保存
+                    ke.preventDefault();
+                    input.blur();
+                }
+                if (ke.key === 'Escape') { // 按 ESC 取消，恢复原名字
+                    input.value = input.dataset.oldName;
+                    input.blur();
+                }
+            });
         }
     });
 
