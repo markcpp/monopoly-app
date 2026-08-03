@@ -2,6 +2,20 @@
     'use strict';
 
     // ── 常量 ──
+    const playerNames = ['玩家一', '玩家二', '玩家三', '玩家四', '玩家五', '玩家六'];
+
+    // 状态只存在自己模块内，不暴露给全局（需要的话通过request事件获取）
+    const state = {
+        playerCount: 3,
+        initMoney: 15000,
+        initReward: 2000,
+        players: [],
+        pendingChanges: {}, // 待变化的金额,点确定之后,清零
+        diceCount: 3,
+        rolling: false,
+    };
+
+
     const dotMap = {
         0: [],
         1: ['mc'],
@@ -12,7 +26,7 @@
         6: ['tl', 'tr', 'ml', 'mr', 'bl', 'br']
     };
 
-    let state = { rolling: false, diceCount: 3 }; // 自己的局部状态，其他状态通过request获取
+    
 
     // ── DOM 工具 ──
     const $ = s => document.querySelector(s);
@@ -34,6 +48,18 @@
     const overlayResult = $('#overlay-result');
 
     const playersContainer = $('#players-container');
+
+    EventBus.respondTo('CMD_REQ_GET_STATE', () => {
+        // 建议深拷贝，避免外部修改影响内部state（关键！）
+        return JSON.parse(JSON.stringify({
+            playerCount: state.playerCount,
+            players: state.players,
+            pendingChanges: state.pendingChanges,
+            initMoney: state.initMoney,
+            initReward: state.initReward,
+            diceCount: state.diceCount
+        }));
+    });
 
    
     // 数字转显示格式：正数→￥X，负数→-￥X，0→￥0
@@ -66,6 +92,29 @@
         
         return cleaned || '0'; // 空内容返回0
     }
+
+    EventBus.on('CMD_INIT_GAME', config => {
+        state.playerCount = config.playerCount;
+        state.initMoney = config.initMoney;
+        state.initReward = config.initReward;
+
+        // 初始化玩家
+        state.players = [];
+        state.pendingChanges = {};
+        for (let i = 0; i < state.playerCount; i++) {
+            state.players.push({
+                id: i,
+                name: playerNames[i],
+                money: state.initMoney,
+                position: 0
+            });
+            state.pendingChanges[i] = 0;
+        }
+        state.rolling = false;
+
+        EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
+        EventBus.emit('CMD_NOTIFY_SWITCH_SCREEN', 'game');
+    });
 
     exitBtn.addEventListener('click', async () => {
         // 发事件让menu显示弹窗，或者自己处理弹窗，这里演示发事件让menu处理
@@ -199,77 +248,67 @@
         });
     }
 
-    let cachedState = null;
-
-    // 只负责渲染，不碰任何EventBus
-    function syncRender(state) {
-        if (!state?.players) {
+    // 渲染卡片
+    function renderPlayers(state) {
+        const players = state?.players ?? [];
+        if (players.length === 0) {
             playersContainer.innerHTML = '<div class="empty-tip">暂无玩家数据</div>';
             return;
         }
         
-        playersContainer.innerHTML = state.players.map((p, i) => {
-            const pc = state.pendingChanges[i];        // 待修改金额
+        return players.map((p, i) => {
+            const pc = state.pendingChanges[i];
             return `
-                <div class="player-card p${i}">
-                    <!-- 左侧：玩家信息 -->
-                    <div class="player-info">
-                        <span class="player-name" data-action="edit-name" data-idx="${i}">
-                            ${escHtml(p.name)}
-                        </span>
-                        <div class="player-money">
-                            ￥${p.money.toLocaleString()}
-                        </div>
-                    </div>
-
-                    <div class="change-money-container">
-                        <div class="change-money-container-inner">
-                            <input 
-                                type="text"
-                                inputmode="tel"
-                                class="amount ${pc > 0 ? 'positive' : pc < 0 ? 'negative' : ''}" 
-                                data-action="edit-amount"
-                                data-idx="${i}"
-                                value="${formatAmount(pc)}"
-                                placeholder="￥0"
-                            >
-                            <button class="btn-confirm ${pc === 0 ? 'gray' : ''}" data-action="confirm-change" data-idx="${i}">
-                                确  定
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 位置显示 -->
-                    <div class="player-position">
-                        ${p.position ? `第 ${p.position} 格` : '未移动'}
+            <div class="player-card p${i}">
+                <div class="player-info">
+                    <span class="player-name" data-action="edit-name" data-idx="${i}">
+                        ${escHtml(p.name)}
+                    </span>
+                    <div class="player-money">
+                        ￥${p.money.toLocaleString()}
                     </div>
                 </div>
-            `;
-        }).join('');
+                <div class="change-money-container">
+                    <div class="change-money-container-inner">
+                        <input 
+                            type="text"
+                            inputmode="tel"
+                            class="amount ${pc > 0 ? 'positive' : pc < 0 ? 'negative' : ''}" 
+                            data-action="edit-amount"
+                            data-idx="${i}"
+                            value="${formatAmount(pc)}"
+                            placeholder="￥0"
+                        >
+                        <button class="btn-confirm ${pc === 0 ? 'gray' : ''}" data-action="confirm-change" data-idx="${i}">
+                            确  定
+                        </button>
+                    </div>
+                </div>
+                <div class="player-position">
+                    ${p.position ? `第 ${p.position} 格` : '未移动'}
+                </div>
+            </div>
+        `;
+    }).join('');
     }
 
-    // 3. 更新缓存并渲染：负责数据获取，只碰EventBus.call
-    async function updateCacheAndRender() {
-        playersContainer.style.opacity = '0.7'; // 轻微置灰表示加载中
-        try {
-            const latestState = await EventBus.call('CMD_REQ_GET_STATE');
-            if (latestState) {
-            cachedState = JSON.parse(JSON.stringify(latestState));
-            syncRender(cachedState);
+    // 带防抖和UI反馈的渲染调度器
+    let renderTimer = null;
+    function scheduleRender() {
+        clearTimeout(renderTimer);
+        renderTimer = setTimeout(() => {
+            playersContainer.style.opacity = '0.7';
+            try {
+                playersContainer.innerHTML = renderPlayers(state);
+            } finally {
+                playersContainer.style.opacity = '1';
             }
-        } finally {
-            playersContainer.style.opacity = '1'; // 恢复显示
-        }
+        }, 50);
     }
 
-    
+    // 4. 监听事件
+    EventBus.on('CMD_NOTIFY_STATE_UPDATED', scheduleRender);
 
-    // 4. 监听数据更新通知：数据变了才重新请求
-    let updateTimer = null;
-    EventBus.on('CMD_NOTIFY_STATE_UPDATED', () => {
-        clearTimeout(updateTimer);
-        updateTimer = setTimeout(updateCacheAndRender, 50); // 50ms内只执行一次
-    });
 
     // ── 玩家卡片区域事件委托 ──
     // 1. 聚焦时：显示纯数字，方便编辑（去掉￥）
@@ -509,6 +548,17 @@
             
             input.setSelectionRange(cursorPos, cursorPos);
         }
+    });
+
+    // ✅ 确认修改：将待修改金额应用到真实资金
+    EventBus.on('CMD_NOTIFY_CONFIRM_CHANGE', ({ idx, pending }) => {
+        if (!state.players[idx] || pending === 0) return;
+
+        const oldMoney = state.players[idx].money;
+        state.players[idx].money = Math.round(oldMoney + pending);
+        state.pendingChanges[idx] = 0;
+
+        EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
     });
 
 })(window);

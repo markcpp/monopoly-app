@@ -1,6 +1,10 @@
 
 (function (global) {
     'use strict';
+
+    // 开发环境标记，方便调试
+    global.__DEV__ = false;
+
     const events = {};      // 普通事件监听池
     const onceEvents = {};  // 单次监听池
     const pendingRequests = {}; // 请求-响应池（用于处理需要返回值的调用）
@@ -134,7 +138,4 @@
             }
         }
     };
-
-    // 开发环境标记，方便调试
-    global.__DEV__ = true;
 })(window);
