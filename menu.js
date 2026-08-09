@@ -1,9 +1,5 @@
 (function (global) {
   'use strict';
-  // 局部变量
-  const menuState = {
-
-  };
   let playerCount = 3;
   let initMoney = 15000;
   let initReward = 2000;
@@ -19,17 +15,28 @@
   const initMoneyInput  = $('#init-money');
   const initRewardInput = $('#init-reward');
   const startBtn        = $('#start-btn');
+  const modalOverlay    = $('#modal-overlay');
 
   // 监听“切换界面”命令（比如game发退出命令，menu处理）
   EventBus.on('CMD_NOTIFY_SWITCH_SCREEN', screenName => {
+    // ✅ 1. 加调试日志，切换时一眼能看清有没有生效
+    console.log(`[Screen] 切换到${screenName}界面`);
+    
+    // ✅ 2. 核心：同步屏幕状态到body，给之前renderModal的判断用
+    document.body.dataset.screen = screenName;
+
     if (screenName === 'menu') {
-      gameScreen.classList.remove('active');
-      menuScreen.classList.add('active');
+        gameScreen.classList.remove('active');
+        menuScreen.classList.add('active');
+
+        modalOverlay.style.display = 'none';
+        modalOverlay.classList.remove('show');
     } else {
-      menuScreen.classList.remove('active');
-      gameScreen.classList.add('active');
+        menuScreen.classList.remove('active');
+        gameScreen.classList.add('active');
+        EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
     }
-  });
+});
 
   // ── 选择玩家人数 ──
   countRow.addEventListener('click', e => {

@@ -1,21 +1,23 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#1a1a2e">
-    <link rel="stylesheet" href="style.css">
-    <title>大富翁</title>
-  </head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1a1a2e">
+  <link rel="stylesheet" href="style.css">
+  <title>大富翁</title>
+  <!-- 关闭了favicon.ico的请求，避免浏览器报错 -->
+  <link rel="icon" href="data:,">
+</head>
 
-  <body>
+<body>
 
-    <!-- ── 菜单界面 ── -->
-    <div id="menu-screen" class="screen active">
+  <!-- ── 菜单界面 ── -->
+  <div id="menu-screen" class="screen active">
     <div class="logo-area">
       <div class="logo-title">🎩<text>大富翁</text>🎩</div>
       <div class="logo-sub">MONOPOLY</div>
@@ -40,7 +42,7 @@
       </div>
       <button class="start-btn" id="start-btn">开 始 游 戏</button>
     </div>
-  </div>  
+  </div>
 
 
   <!-- ── 游戏界面 ── -->
@@ -84,12 +86,23 @@
     </div>
   </div>
 
+  <!-- 事件弹窗 -->
+  <div class="modal-overlay" id="event-modal">
+    <div class="modal-card">
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-actions" id="modal-actions"></div>
+    </div>
+  </div>
+
   <!-- 基础公共模块：最先加载 -->
   <script src="eventBus.js"></script>
+  <script src="map.js"></script>
   <!-- 其他模块顺序随意，互不依赖 -->
   <script src="audio.js"></script>
   <script src="menu.js"></script>
   <script src="game.js"></script>
 
-  </body>
+</body>
+
 </html>

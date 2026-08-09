@@ -13,6 +13,10 @@
         pendingChanges: {}, // 待变化的金额,点确定之后,清零
         diceCount: 3,
         rolling: false,
+        //map.js相关
+        currentPlayerIdx: 0,        // 当前掷骰子的玩家索引
+        diceResult: 0,           // 上次骰子结果
+        lastEvent: null          // 最后一次触发的事件（用于弹窗）
     };
 
 
@@ -46,8 +50,12 @@
     const bigDie3 = $('#big-die3');
     const bigDie4 = $('#big-die4');
     const overlayResult = $('#overlay-result');
-
     const playersContainer = $('#players-container');
+
+    const eventModal = $('#event-modal');
+    const modalTitle = $('#modal-title');
+    const modalBody = $('#modal-body');
+    const modalActions = $('#modal-actions');
 
     EventBus.respondTo('CMD_REQ_GET_STATE', () => {
         // 建议深拷贝，避免外部修改影响内部state（关键！）
@@ -106,14 +114,20 @@
                 id: i,
                 name: playerNames[i],
                 money: state.initMoney,
-                position: 0
+                position: 0,
+                hasMoved: false, //没动过就不发起点奖励
+                own: {}          //地皮初始化,如{'中国': 0, '日本': 0,}，0:只有地皮
             });
             state.pendingChanges[i] = 0;
         }
-        state.rolling = false;
 
-        EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
+        state.rolling = false;
+        state.currentPlayerIdx = 0;
+        state.diceResult = 0;
+        state.lastEvent = null;
+
         EventBus.emit('CMD_NOTIFY_SWITCH_SCREEN', 'game');
+        EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
     });
 
     exitBtn.addEventListener('click', async () => {
@@ -222,6 +236,7 @@
                 }
                 [bigDie1, bigDie2, bigDie3, bigDie4].forEach(d => d.style.animation = 'none');
 
+                state.diceResult = sum;
                 overlayResult.textContent = results.join(' + ') + ' = ' + sum;
                 overlayResult.classList.add('show');
 
@@ -232,6 +247,13 @@
                     diceOverlay.classList.remove('show');
                     state.rolling = false;
                     rollBtn.disabled = false;
+
+                    const currentPlayer = state.players[state.currentPlayerIdx];
+                    if (currentPlayer && state.diceResult > 0) {
+                        console.log(`[Game] 骰子动画结束，${currentPlayer.name} 移动 ${state.diceResult} 步`);
+                        movetoNewPosition(currentPlayer, state.diceResult);
+                        state.diceResult = 0;
+                    }
                 }, 1500);
             }
         }, 40);
@@ -259,7 +281,7 @@
         return players.map((p, i) => {
             const pc = state.pendingChanges[i];
             return `
-            <div class="player-card p${i}">
+            <div class="player-card ${i === state.currentPlayerIdx ? 'active-player' : ''}">
                 <div class="player-info">
                     <span class="player-name" data-action="edit-name" data-idx="${i}">
                         ${escHtml(p.name)}
@@ -285,7 +307,7 @@
                     </div>
                 </div>
                 <div class="player-position">
-                    ${p.position ? `第 ${p.position} 格` : '未移动'}
+                    ${p.position !== undefined ? `${MAP_CONFIG.worldMap[p.position]}` : '赤道'}
                 </div>
             </div>
         `;
@@ -308,34 +330,6 @@
 
     // 4. 监听事件
     EventBus.on('CMD_NOTIFY_STATE_UPDATED', scheduleRender);
-
-
-    // ── 玩家卡片区域事件委托 ──
-    // 1. 聚焦时：显示纯数字，方便编辑（去掉￥）
-    playersContainer.addEventListener('focusin', (e) => {
-        if (e.target.classList.contains('amount')) {
-            const input = e.target;
-            const idx = parseInt(input.dataset.idx);
-            const num = parseAmount(input.value) || 0;
-            
-            // ✅ 关键修改：聚焦时显示纯数字（不带￥），方便编辑
-            // 即使是0也显示"0"，而不是"￥0"
-            input.value = num.toString();
-            input.select(); // 全选，方便直接覆盖输入
-
-            // 同步更新按钮状态
-            const confirmBtn = playersContainer.querySelector(`.btn-confirm[data-idx="${idx}"]`);
-            if (confirmBtn) {
-                if (num === 0) {
-                    confirmBtn.classList.add('gray');
-                    confirmBtn.disabled = true;
-                } else {
-                    confirmBtn.classList.remove('gray');
-                    confirmBtn.disabled = false;
-                }
-            }
-        }
-    });
 
     // 2. 输入时：实时过滤非法字符 + 格式化显示 + 更新pendingChanges
     playersContainer.addEventListener('input', (e) => {
@@ -518,38 +512,6 @@
         }
     });
 
-    // game.js → 替换 input 事件里的光标计算部分
-    playersContainer.addEventListener('input', (e) => {
-        if (e.target.classList.contains('amount')) {
-            const input = e.target;
-            const idx = parseInt(input.dataset.idx);
-            const pure = getPureNumber(input.value);
-            const num = parseInt(pure) || 0;
-
-            // 更新状态
-            EventBus.emit('CMD_NOTIFY_UPDATE_PENDING', { idx, money: num });
-            const confirmBtn = playersContainer.querySelector(`.btn-confirm[data-idx="${idx}"]`);
-            if (confirmBtn) {
-                confirmBtn.classList.toggle('gray', num === 0);
-                confirmBtn.disabled = num === 0;
-            }
-            input.classList.toggle('positive', num > 0);
-            input.classList.toggle('negative', num < 0);
-
-            // ✅ 关键修改：根据正负号动态计算光标位置
-            const formatted = formatAmount(num);
-            input.value = formatted;
-            
-            // 正数：￥200 → 前缀长度1，光标在1+3=4
-            // 负数：-￥200 → 前缀长度2，光标在2+3=5
-            const prefixLen = num >= 0 ? 1 : 2; // ￥占1位，-￥占2位
-            const digitLen = Math.abs(num).toString().length;
-            const cursorPos = prefixLen + digitLen; // 光标在数字末尾
-            
-            input.setSelectionRange(cursorPos, cursorPos);
-        }
-    });
-
     // ✅ 确认修改：将待修改金额应用到真实资金
     EventBus.on('CMD_NOTIFY_CONFIRM_CHANGE', ({ idx, pending }) => {
         if (!state.players[idx] || pending === 0) return;
@@ -561,6 +523,307 @@
         EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
     });
 
+
+
+    //-------------------骰子动画结束,玩家移动及后续逻辑-------------------
+    function movetoNewPosition(player, steps) {
+        if (!player || isNaN(steps)) return;
+        if (player.position === undefined) {player.position = 0;}
+
+        const oldPos = player.position;
+        // ✅ 正确计算循环位置（16格，0-15）
+        const newPos = (oldPos + steps) % MAP_CONFIG.mapLength;
+        state.players[player.id].position = newPos;
+
+        // ✅ 正确获取地名
+        const location = MAP_CONFIG.worldMap[newPos];
+        console.log(`[Game] ${player.name} 移动 ${steps} 步，到达 ${location}(第${newPos}格)`);
+
+        player.hasMoved = true; 
+
+        // 如经过起点,奖励金额
+        const passedStart = oldPos + steps >= MAP_CONFIG.mapLength && player.hasMoved;
+        if (passedStart) {
+            player.money += state.initReward;
+            console.log(`[Game] ${player.name} 经过起点，获得奖励￥${state.initReward}`);
+        }
+
+        handleLanding(player);
+        EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
+    }
+
+    //格子事件处理
+    function handleLanding(player) {
+        // 按格子类型判断「是否需要弹窗」
+        let location = MAP_CONFIG.worldMap[player.position]
+        if(!MAP_CONFIG.hasPrice(location)) {
+            if(location === '机会') {
+                triggerChanceEvent(player.id);
+            }else if(location === '命运') {
+                // 先空着
+            }
+        }else{
+            // 无主地皮
+            if(getLocationInfo(location) === null) {
+                console.log(`[Game] ${player.name} 到达无主地皮 ${location}`);
+                state.lastEvent = { 
+                    type: 'buy', 
+                    playerId: player.id, 
+                    location:MAP_CONFIG.worldMap[player.position]
+                };
+            }
+            // 自己的地皮且不到5级
+            else if(getLocationInfo(location).playerId === player.id && getLocationInfo(location).level < 5) {
+                console.log(`[Game] ${player.name} 到达自己的地皮 ${location}，可升级`);
+                state.lastEvent = { 
+                    type: 'upgrade', 
+                    playerId: player.id,
+                    location:MAP_CONFIG.worldMap[player.position]
+                };
+            }
+            // 其他玩家的地皮,要交过路费
+            else if(getLocationInfo(location).playerId !== player.id) {
+                console.log(`[Game] ${player.name} 到达其他玩家的地皮 ${location}，需交过路费`);
+                state.lastEvent = { 
+                    type: 'toll', 
+                    playerId: player.id,                           //出钱的玩家id
+                    ownerId: getLocationInfo(location).playerId,  //收钱的玩家id
+                    location:MAP_CONFIG.worldMap[player.position],
+                    toll: MAP_CONFIG.getToll(location, getLocationInfo(location).level), //过路费
+                };
+            }
+        }
+        renderModal(state.lastEvent);
+        // switchToNextPlayer();
+    }
+
+    // 查询 地皮归属的玩家id 和 地皮等级
+    function getLocationInfo(location) {
+        for (let i = 0; i < state.players.length; i++) {
+            if (state.players[i].own.hasOwnProperty(location)) {
+                return {
+                    playerId: i,
+                    level: state.players[i].own[location]
+                };
+            }
+        }
+        return null; // 无主地
+    }
+
+    // 机会事件触发
+    function triggerChanceEvent(playerIdx) {
+        const player = state.players[playerIdx];
+        const events = [
+            { msg: '捡到钱！获得 ￥500', effect: p => p.money += 500 },
+            { msg: '请客吃饭，支出 ￥300', effect: p => p.money -= 300 },
+            { msg: '中彩票！获得 ￥2000', effect: p => p.money += 2000 },
+            { msg: '修车费，支出 ￥800', effect: p => p.money -= 800 },
+            { msg: '打工赚外快，获得 ￥1000', effect: p => p.money += 1000 },
+            { msg: '什么都没发生', effect: p => {} }
+        ];
+        const ev = events[Math.floor(Math.random() * events.length)];
+        ev.effect(player);
+
+        state.lastEvent = {
+            type: 'chance',
+            playerId: player.id,
+            message: `🎲 机会卡：${ev.msg}`
+        };
+        console.log(`[Game] ${player.name} 触发机会：${ev.msg}`);
+        EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
+    }
+
+    // ==================== 弹窗渲染 ====================
+    function renderModal(event) {
+        // 调试：打印当前状态
+        console.log('[renderModal] 当前事件:', event);
+
+        //没有事件时隐藏弹窗
+        if (!event) {
+            eventModal.classList.remove('show');
+            eventModal.style.display = 'none'; 
+            return;
+        }
+        //有事件时显示弹窗
+        eventModal.style.display = 'flex';
+        eventModal.classList.add('show');
+
+        const player = state.players[event.playerId];
+        
+        switch (event.type) {
+            case 'buy': {
+                console.log(`[renderModal] 显示购买弹窗，玩家: ${player.name}, 地皮: ${event.location}, 购买价格: ${MAP_CONFIG.locationConfigs[event.location].buy}`);
+                modalTitle.textContent = '🏝️ 新领地';
+                modalBody.innerHTML = `
+                    <div>欢迎来到 <span class="highlight">${event.location}</span></div>
+                    <div style="margin-top:8px;">购买价格：<span class="highlight">￥${MAP_CONFIG.locationConfigs[event.location].buy.toLocaleString()}</span></div>
+                    <div style="margin-top:8px;color:#aaa;font-size:14px;">你的余额：￥${player.money.toLocaleString()}</div>
+                `;
+                modalActions.innerHTML = `
+                    <button class="btn-skip" data-action="confirm-skip">路过</button>
+                    <button class="btn-buy" data-action="confirm-buy">购买</button>
+                `;
+                break;
+            }
+            case 'upgrade': {
+                console.log(`[renderModal] 显示升级弹窗，玩家: ${player.name}, 地皮: ${event.location}, 当前等级: ${getLocationInfo(event.location).level}, 升级费用: ${MAP_CONFIG.locationConfigs[event.location].upgrade.toLocaleString()}`);
+                modalTitle.textContent = '⬆️ 升级地皮';
+                modalBody.innerHTML = `
+                    <div>
+                        <span class="highlight">${player.name}</span> 的领地
+                        <span class="highlight">${event.location}</span>
+                    </div>
+                    <div style="margin-top:8px;">当前等级：<span class="highlight">${getLocationInfo(event.location).level}级</span></div>
+                    <div style="margin-top:8px;">升级费用：<span class="highlight">￥${MAP_CONFIG.locationConfigs[event.location].upgrade.toLocaleString()}</span></div>
+                    <div style="margin-top:8px;color:#aaa;font-size:14px;">你的余额：￥${player.money.toLocaleString()}</div>
+                `;
+                modalActions.innerHTML = `
+                    <button class="btn-skip" data-action="confirm-skip">跳过</button>
+                    <button class="btn-upgrade" data-action="confirm-upgrade">升级</button>
+                `;
+                break;
+            }
+            case 'toll': {
+                const owner = state.players[event.ownerId];
+                console.log(`[renderModal] 显示缴纳过路费弹窗，玩家: ${player.name},拥有金额: ￥${player.money}, 地皮: ${event.location}, 过路费: ${event.toll}, 收费玩家: ${owner.name},拥有金额: ￥${owner.money}`);
+                modalTitle.textContent = '💰 缴纳过路费';
+                    modalBody.innerHTML = `
+                        <div><span class="highlight">${event.location}</span> 属于 <span class="highlight">${owner.name}</span></div>
+                        <div style="margin-top:8px;">地皮等级：<span class="highlight">${getLocationInfo(event.location).level}级</span></div>
+                        <div style="margin-top:8px;" class="danger">需支付：￥${event.toll}</div>
+                        <div style="margin-top:8px;color:#aaa;font-size:14px;">你的余额：￥${player.money.toLocaleString()}</div>
+                    `;
+                modalActions.innerHTML = `
+                    <button class="btn-pay" data-action="confirm-pay">支付</button>
+                `;
+                break;
+            }
+            case 'chance': {
+                console.log(`[renderModal] 显示机会卡弹窗，玩家: ${player.name}, 消息: ${event.message}`);
+                modalTitle.textContent = '🎲 机会卡';
+                modalBody.innerHTML = `<div>${event.message}</div>`;
+                modalActions.innerHTML = `
+                    <button class="btn-skip" data-action="confirm-skip">知道了</button>
+                `;
+                break;
+            }
+        }
+    }
+
+    // ==================== 弹窗按钮点击 ====================
+    modalActions.addEventListener('click', (e) => {
+        const action = e.target.dataset.action;
+        if (!action || !state.lastEvent) return;
+
+        const event = state.lastEvent;  // 缓存当前事件
+        const location = event.location;
+        const player = state.players[event.playerId];
+
+        // 业务操作
+        switch (action) {
+            case 'confirm-buy': {
+                const price = MAP_CONFIG.locationConfigs[location].buy;
+                if (player.money >= price) {
+                    player.money -= price;
+                    player.own[location] = location;
+                    player.own[location] = 0;
+                    console.log(`[Game] ${player.name} 购买了 ${location}，花费 ￥${price}`);
+
+                }
+                break;
+            }
+            case 'confirm-upgrade': {
+                const upgradePrice = MAP_CONFIG.locationConfigs[location].upgrade;
+                console.log(`[Game] player.money=${player.money},upgradePrice=${upgradePrice},player.own[location]=${player.own[location]}`);
+                if (player.money >= upgradePrice && player.own[location] < 5) {
+                    player.money -= upgradePrice;
+                    player.own[location] += 1;
+                    console.log(`[Game] ${player.name} 升级了 ${location}，当前 ${player.own[location]}级`);
+                }
+                break;
+            }
+            case 'confirm-pay': {
+                const toll = MAP_CONFIG.getToll(location, getLocationInfo(location).level);
+                const owner = state.players[event.ownerId];
+                const actualToll = Math.min(player.money, toll);
+                player.money -= actualToll;
+                owner.money += actualToll;
+                break;
+            }
+        }
+        state.lastEvent = null;
+        eventModal.classList.remove('show');
+        eventModal.style.display = 'none'; 
+        switchToNextPlayer();
+
+    });
+
+    // // ==================== 玩家决策：购买地皮 ====================
+    // EventBus.on('CMD_PLAYER_BUY', ({ playerIdx, gridName }) => {
+    //     const player = state.players[playerIdx];
+    //     const price = MAP_CONFIG.locationConfigs[gridName]?.buy;
+
+    //     if (!player || !prop || prop.owner !== null || !price) return;
+
+    //     if (player.money >= price) {
+    //         player.money -= price;
+    //         prop.owner = playerIdx;
+    //         prop.level = 0;
+    //         console.log(`[Game] ${player.name} 购买了 ${gridName}，花费 ￥${price}`);
+    //     } else {
+    //         console.log(`[Game] ${player.name} 资金不足，无法购买 ${gridName}`);
+    //     }
+
+    //     state.lastEvent = null; // 清除事件
+    //     EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
+    // });
+
+    // // ==================== 玩家决策：升级地皮 ====================
+    // EventBus.on('CMD_PLAYER_UPGRADE', ({ playerIdx, gridName }) => {
+    //     const player = state.players[playerIdx];
+    //     const upgradePrice = MAP_CONFIG.locationConfigs[gridName]?.upgrade;
+
+    //     if (!player || !prop || prop.owner !== playerIdx || !upgradePrice) return;
+    //     if (prop.level >= 5) return; // 最高5级
+
+    //     if (player.money >= upgradePrice) {
+    //         player.money -= upgradePrice;
+    //         prop.level += 1;
+    //         console.log(`[Game] ${player.name} 升级了 ${gridName}，当前 ${prop.level}级`);
+    //     }
+
+    //     state.lastEvent = null;
+    //     EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
+    // });
+
+    // // ==================== 玩家决策：交过路费 ====================
+    // EventBus.on('CMD_PLAYER_PAY_TOLL', ({ playerIdx, gridName }) => {
+    //     const player = state.players[playerIdx];
+    //     if (!player || !prop || prop.owner === null || prop.owner === playerIdx) return;
+
+    //     const toll = MAP_CONFIG.getToll(gridName, prop.level);
+    //     const owner = state.players[prop.owner];
+
+    //     // 扣钱（如果钱不够，扣到0）
+    //     const actualToll = Math.min(player.money, toll);
+    //     player.money -= actualToll;
+    //     owner.money += actualToll;
+
+    //     console.log(`[Game] ${player.name} 向 ${owner.name} 支付过路费 ￥${actualToll}`);
+
+    //     state.lastEvent = null;
+    //     EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
+    // });
+
+    function switchToNextPlayer() {
+        // 1. 切换到下一个玩家
+        state.currentPlayerIdx = (state.currentPlayerIdx + 1) % state.playerCount;
+        // 2. 清除当前事件缓存
+        state.lastEvent = null;
+        // 3. 通知 UI 刷新（高亮变化）
+        EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
+        console.log(`[Game] 回合结束，轮到玩家 ${state.currentPlayerIdx + 1}: ${state.players[state.currentPlayerIdx].name}`);
+    }
 })(window);
 
 
