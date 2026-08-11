@@ -136,6 +136,7 @@
 
     // 公共函数：根据金额计算光标位置（正数￥前缀1位，负数-￥前缀2位）
     function getCursorPosForAmount(num) {
+        console.log("getCursorPosForAmount");
         const prefixLen = num >= 0 ? 1 : 2; // 正数￥占1位，负数-￥占2位
         const digitLen = Math.abs(num).toString().length; // 数字部分长度
         return prefixLen + digitLen; // 光标永远在数字末尾
@@ -374,14 +375,20 @@
         }
     });
 
-    // 失焦时：如果为空，重置为￥0
+    // 聚焦时：如果为空，重置为￥0
     playersContainer.addEventListener('focusin', (e) => {
         if (e.target.classList.contains('amount')) {
             const input = e.target;
             const idx = parseInt(input.dataset.idx);
             const num = parseAmount(input.value) || 0;
-            input.value = num.toString(); // 去掉￥，显示纯数字
-            input.select(); // 全选，方便直接覆盖
+
+             // ✅ 直接用格式化后的带￥内容（和你失焦时的显示完全一致）
+            const formatted = formatAmount(num);
+            input.value = formatted;
+            
+            // ✅ 光标定位到数字末尾（用你现有的函数，完全兼容正负）
+            const cursorPos = getCursorPosForAmount(num);
+            input.setSelectionRange(cursorPos, cursorPos);
 
             // 同步按钮状态
             const confirmBtn = playersContainer.querySelector(`.btn-confirm[data-idx="${idx}"]`);
@@ -500,7 +507,7 @@
             input.classList.toggle('negative', newNum < 0);
 
             input.value = formatAmount(newNum);
-            const cursorPos = getCursorPosForAmount(newNum); 
+            // const cursorPos = getCursorPosForAmount(newNum); 
 
             // 移除跳过标记，避免影响后续手动输入
             Promise.resolve().then(() => delete input.dataset.skipInput);
