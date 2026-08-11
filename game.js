@@ -72,8 +72,9 @@
                 money: state.initMoney,
                 oldPos: 0,
                 newPos: -1,
-                hasMoved: false, //没动过就不发起点奖励
-                own: {}          //地皮初始化,如{'中国': 0, '日本': 0,}，0:只有地皮
+                hasMoved: false,   //没动过不发起点奖励
+                isBankrupt: false, //如破产就出局
+                own: {}            //地皮初始化,如{'中国': 0, '日本': 0,}，0:只有地皮
             });
             state.pendingChanges[i] = 0;
         }
@@ -83,6 +84,7 @@
         state.diceResult = 0;
         state.lastEvent = null;
 
+        state.gameOver = false;
 
         EventBus.emit('CMD_NOTIFY_SWITCH_SCREEN', 'game');
         EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
@@ -296,7 +298,7 @@
                     <span class="player-name" data-action="edit-name" data-idx="${i}">
                         ${escHtml(p.name)}
                     </span>
-                    <div class="player-money">
+                    <div class="player-money ${p.money < 0 ? 'negative' : ''}">
                         ￥${p.money.toLocaleString()}
                     </div>
                 </div>
@@ -332,6 +334,7 @@
     function scheduleRender() {
         clearTimeout(renderTimer);
         renderTimer = setTimeout(() => {
+            checkGameOver();
             playersContainer.style.opacity = '0.7';
             try {
                 playersContainer.innerHTML = renderPlayers(state);
@@ -344,32 +347,30 @@
     // 4. 监听事件
     EventBus.on('CMD_NOTIFY_STATE_UPDATED', scheduleRender);
 
-    // 输入时：实时过滤非法字符 + 格式化显示 + 更新pendingChanges
+    // 输入时：实时过滤非法字符 + 格式化显示
     playersContainer.addEventListener('input', (e) => {
         if (e.target.classList.contains('amount')) {
             const input = e.target;
             const idx = parseInt(input.dataset.idx);
 
-            // 1. 洗成纯数字字符串
+            // 洗成纯数字字符串
             const pure = getPureNumber(input.value);
             const num = parseInt(pure) || 0;
 
-            // 2. 更新pendingChanges+按钮状态
-            EventBus.emit('CMD_NOTIFY_UPDATE_PENDING', { idx, money: num });
+            // 更新按钮状态
             const confirmBtn = playersContainer.querySelector(`.btn-confirm[data-idx="${idx}"]`);
             if (confirmBtn) {
                 confirmBtn.classList.toggle('gray', num === 0);
                 confirmBtn.disabled = num === 0;
             }
 
-            // 3. 更新金额颜色
+            // 更新金额颜色
             input.classList.toggle('positive', num > 0);
             input.classList.toggle('negative', num < 0);
 
-            // 4. 格式化显示+定位光标（核心：光标永远在数字最后面）
+            // 格式化显示+定位光标
             input.value = formatAmount(num);
             const cursorPos = getCursorPosForAmount(num); 
-            input.setSelectionRange(cursorPos, cursorPos);
         }
     });
 
@@ -408,10 +409,11 @@
         }
     });
 
-    // 点击确定按钮：应用金额到总金额
+    // 玩家卡片点击事件
     playersContainer.addEventListener('click', (e) => {
         const action = e.target.dataset.action;
         const idx = parseInt(e.target.dataset.idx);
+        //点击确定按钮
         if (action === 'confirm-change') {
             const input = playersContainer.querySelector(`.amount[data-idx="${idx}"]`);
             const pending = parseAmount(input?.value) || 0;
@@ -421,7 +423,7 @@
                 input?.blur();
             }
         }
-        // 修改玩家名字
+        // 点击玩家名字,可以修改名字
         if (action === 'edit-name') {
             const span = e.target;
             const idx = parseInt(span.dataset.idx);
@@ -479,6 +481,7 @@
                 }
             });
         }
+        // 点击减号
         if (action === 'sub') {
             const input = playersContainer.querySelector(`.amount[data-idx="${idx}"]`);
             if (!input) return;
@@ -486,24 +489,19 @@
             input.dataset.skipInput = 'true';
             const currentNum = parseAmount(input.value) || 0;
             const newNum = -currentNum; // 切换正负，和你原来的键盘逻辑完全一致
-            // 1. 更新pending状态
-            EventBus.emit('CMD_NOTIFY_UPDATE_PENDING', { idx, money: newNum });
-            // 2. 更新确定按钮状态
+            // 更新确定按钮状态
             const confirmBtn = playersContainer.querySelector(`.btn-confirm[data-idx="${idx}"]`);
             if (confirmBtn) {
                 confirmBtn.classList.toggle('gray', newNum === 0);
                 confirmBtn.disabled = newNum === 0;
             }
-            // 3. 更新输入框颜色
+            // 更新输入框颜色
             input.classList.toggle('positive', newNum > 0);
             input.classList.toggle('negative', newNum < 0);
-            // 4. 格式化显示+光标定位（完全复用你原来的逻辑）
-            const formatted = formatAmount(newNum);
-            input.value = formatted;
-            const prefixLen = newNum >= 0 ? 1 : 2; // ￥占1位，-￥占2位
-            const digitLen = Math.abs(newNum).toString().length;
-            const cursorPos = prefixLen + digitLen;
-            input.setSelectionRange(cursorPos, cursorPos);
+
+            input.value = formatAmount(newNum);
+            const cursorPos = getCursorPosForAmount(newNum); 
+
             // 移除跳过标记，避免影响后续手动输入
             Promise.resolve().then(() => delete input.dataset.skipInput);
         }
@@ -529,8 +527,10 @@
         const oldMoney = state.players[idx].money;
         state.players[idx].money = Math.round(oldMoney + pending);
         state.pendingChanges[idx] = 0;
-
-        EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
+        if(state.players[idx].money < 0){
+            switchToNextPlayer();
+        }else
+            EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
     });
 
 
@@ -605,7 +605,6 @@
             }
         }
         renderModal(state.lastEvent);
-        // switchToNextPlayer();
     }
 
     // 查询 地皮归属的玩家id 和 地皮等级
@@ -813,13 +812,56 @@
     });
 
     function switchToNextPlayer() {
-        state.currentPlayerIdx = (state.currentPlayerIdx + 1) % state.playerCount;
+        if (state.gameOver) return; // 游戏结束不切换
+
+         // 找下一个未出局的玩家
+        let nextPlayerIdx = (state.currentPlayerIdx + 1) % state.playerCount;
+        let loopCount = 0;
+        
+        while (state.players[nextPlayerIdx].isBankrupt) {
+            nextPlayerIdx = (nextPlayerIdx + 1) % state.playerCount;
+            loopCount++;
+            // 找了一圈都没找到，说明只剩1个存活玩家，checkGameOver已经处理过了，直接返回
+            if (loopCount >= state.playerCount) return;
+        }
+
+        state.currentPlayerIdx = nextPlayerIdx;
         state.lastEvent = null;
         const player = state.players[state.currentPlayerIdx];
         if(player.newPos != -1) player.oldPos = player.newPos;
         player.newPos = -1;//用-1清空新地点的显示
         EventBus.emit('CMD_NOTIFY_STATE_UPDATED');
         console.log(`[Game] 回合结束，轮到玩家 ${state.currentPlayerIdx + 1}: ${state.players[state.currentPlayerIdx].name}`);
+    }
+
+    // 玩家出局处理
+    function checkGameOver() {
+        if (state.gameOver) return; // 已经结束的游戏不再重复检查
+
+        // 1. 遍历所有玩家，标记出局
+        state.players.forEach((player, idx) => {
+            // 只标记未出局且资金<0的玩家，避免重复处理
+            if (!player.isBankrupt && player.money < 0) {
+                player.isBankrupt = true;
+                console.log(`[Game] ${player.name} 资金不足，已出局！`);
+            }
+        });
+
+        // 2. 统计存活玩家（未出局）
+        const alivePlayers = state.players.filter(p => !p.isBankrupt);
+        const aliveCount = alivePlayers.length;
+
+        // 3. 只剩1个存活玩家，触发胜利
+        if (aliveCount === 1) {
+            state.gameOver = true; // 标记游戏已结束，避免重复触发
+            // handleVictory(alivePlayers[0]);
+        }
+        // 4. 兜底：没人存活（极端情况），直接回菜单
+        else if (aliveCount === 0) {
+            state.gameOver = true;
+            console.log(`[Game] 所有玩家都出局，游戏结束！`);
+            // EventBus.emit('CMD_NOTIFY_SWITCH_SCREEN', 'menu');
+        }
     }
 })(window);
 
