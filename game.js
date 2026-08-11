@@ -135,12 +135,11 @@
     }
 
     // 公共函数：根据金额计算光标位置（正数￥前缀1位，负数-￥前缀2位）
-    function getCursorPosForAmount(num) {
-        console.log("getCursorPosForAmount");
-        const prefixLen = num >= 0 ? 1 : 2; // 正数￥占1位，负数-￥占2位
-        const digitLen = Math.abs(num).toString().length; // 数字部分长度
-        return prefixLen + digitLen; // 光标永远在数字末尾
-    }
+    // function getCursorPosForAmount(num) {
+    //     const prefixLen = num >= 0 ? 1 : 2; // 正数￥占1位，负数-￥占2位
+    //     const digitLen = Math.abs(num).toString().length; // 数字部分长度
+    //     return prefixLen + digitLen; // 光标永远在数字末尾
+    // }
 
     exitBtn.addEventListener('click', () => {
         // 发事件让menu显示弹窗，或者自己处理弹窗，这里演示发事件让menu处理
@@ -371,7 +370,6 @@
 
             // 格式化显示+定位光标
             input.value = formatAmount(num);
-            const cursorPos = getCursorPosForAmount(num); 
         }
     });
 
@@ -387,8 +385,8 @@
             input.value = formatted;
             
             // ✅ 光标定位到数字末尾（用你现有的函数，完全兼容正负）
-            const cursorPos = getCursorPosForAmount(num);
-            input.setSelectionRange(cursorPos, cursorPos);
+            // const cursorPos = getCursorPosForAmount(num);
+            // input.setSelectionRange(cursorPos, cursorPos);
 
             // 同步按钮状态
             const confirmBtn = playersContainer.querySelector(`.btn-confirm[data-idx="${idx}"]`);
@@ -507,7 +505,6 @@
             input.classList.toggle('negative', newNum < 0);
 
             input.value = formatAmount(newNum);
-            // const cursorPos = getCursorPosForAmount(newNum); 
 
             // 移除跳过标记，避免影响后续手动输入
             Promise.resolve().then(() => delete input.dataset.skipInput);
