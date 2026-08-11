@@ -620,7 +620,7 @@
 }
 
 .player-money {
-  width: 125px; 
+  width: 140px; 
   font-size: 28px;
   font-weight: bold;
   color: #ffd700;
@@ -634,18 +634,22 @@
 
 /* 右侧更改金额区域 */
 
-.change-money-container {}
-
-.change-money-container-inner {
+.change-money-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 3px;
+}
+
+.change-money-container-inner {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
 }
 
 .amount {
-  height: 35px;
+  height: 30px;
   width: 90px;
   display: flex;
   align-items: center;
@@ -695,14 +699,41 @@
   box-shadow: 0 0 0 2px rgba(245, 200, 66, 0.3);
 }
 
+/* 减号按钮 */
+.btn-round {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: none;
+  font-size: 30px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+  line-height: 1;
+  flex-shrink: 0; /* 防止缩放时变形 */
+}
+
+.btn-round:active {
+  transform: scale(0.9);
+}
+
+.btn-minus {
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+}
+
+
 /* 调整确认按钮样式，使其与新布局协调 */
 
 .btn-confirm {
   height: 35px;
-  width: 90px;
+  width: 50px;
   background: rgba(245, 200, 66, 0.2);
   color: #f5c842;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   padding: 0 5px;
   padding-bottom: 3px;
@@ -736,7 +767,7 @@
     top: 8px;
     left: 8px;
     min-width: 80px;
-    max-width: 120px;
+    /* max-width: 120px; */
     padding: 6px 8px;
     font-size: 20px;
     line-height: 1.3;
@@ -762,8 +793,8 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-    display: none; /* 默认隐藏 */
+    /* backdrop-filter: blur(5px); 模糊化*/
+    display: none; 
     align-items: center;
     justify-content: center;
     z-index: 1000;

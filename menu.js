@@ -17,20 +17,15 @@
   const startBtn        = $('#start-btn');
   const modalOverlay    = $('#modal-overlay');
 
-  // 监听“切换界面”命令（比如game发退出命令，menu处理）
+  // 切换界面
   EventBus.on('CMD_NOTIFY_SWITCH_SCREEN', screenName => {
-    // ✅ 1. 加调试日志，切换时一眼能看清有没有生效
-    console.log(`[Screen] 切换到${screenName}界面`);
+    // console.log(`[Screen] 切换到${screenName}界面`);
     
-    // ✅ 2. 核心：同步屏幕状态到body，给之前renderModal的判断用
     document.body.dataset.screen = screenName;
 
     if (screenName === 'menu') {
         gameScreen.classList.remove('active');
         menuScreen.classList.add('active');
-
-        modalOverlay.style.display = 'none';
-        modalOverlay.classList.remove('show');
     } else {
         menuScreen.classList.remove('active');
         gameScreen.classList.add('active');
