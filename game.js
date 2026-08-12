@@ -262,7 +262,7 @@
 
                     const currentPlayer = state.players[state.currentPlayerIdx];
                     if (currentPlayer && state.diceResult > 0) {
-                        console.log(`[Game] 骰子动画结束，${currentPlayer.name} 移动 ${state.diceResult} 步`);
+                        // console.log(`[Game] 骰子动画结束，${currentPlayer.name} 移动 ${state.diceResult} 步`);
                         movetoNewPosition(currentPlayer, state.diceResult);
                         state.diceResult = 0;
                     }
@@ -458,10 +458,11 @@
                 // 名字没变化就不发通知
                 if (finalName !== oldName) {
                     // 通知 menu 更新名字（用你熟悉的 CMD_NOTIFY_ 前缀）
-                    EventBus.emit('CMD_NOTIFY_UPDATE_PLAYER_NAME', {
-                        idx: targetIdx,
-                        name: escHtml(finalName) // 转义防注入
-                    });
+                    // EventBus.emit('CMD_NOTIFY_UPDATE_PLAYER_NAME', {
+                    //     idx: targetIdx,
+                    //     name: escHtml(finalName) // 转义防注入
+                    // });
+                    state.players[targetIdx].name = finalName;
                 }
 
                 // 把 input 换回 span
@@ -812,10 +813,18 @@
                 console.warn(`[Game] modalActions中,未识别的按钮点击事件: ${action}`);
             }
         }
-        state.lastEvent = null;
-        eventOverlay.classList.remove('show');
-        eventOverlay.style.display = 'none'; 
-        switchToNextPlayer();
+
+        const modalCard = eventOverlay.querySelector('.modal-card');
+        if (modalCard) {
+            modalCard.classList.add('closing');
+        }
+        setTimeout(() => {
+            state.lastEvent = null;
+            eventOverlay.classList.remove('show');
+            eventOverlay.style.display = 'none';
+            modalCard.classList.remove('closing');
+            switchToNextPlayer();
+        }, 300); 
 
     });
 
@@ -862,7 +871,7 @@
         // 3. 只剩1个存活玩家，触发胜利
         if (aliveCount === 1) {
             state.gameOver = true; // 标记游戏已结束，避免重复触发
-            // handleVictory(alivePlayers[0]);
+            handleVictory(alivePlayers[0]);
         }
         // 4. 兜底：没人存活（极端情况），直接回菜单
         else if (aliveCount === 0) {
@@ -870,6 +879,44 @@
             console.log(`[Game] 所有玩家都出局，游戏结束！`);
             // EventBus.emit('CMD_NOTIFY_SWITCH_SCREEN', 'menu');
         }
+    }
+
+    function handleVictory() {
+        const alivePlayer = state.players.find(p => !p.isBankrupt);
+        if (!alivePlayer) return;
+        
+        console.log(`[Game] 游戏结束！${alivePlayer.name} 胜利！`);
+        // rollBtn.disabled = true; // 禁用掷骰子
+        // state.rolling = false;
+
+        // 创建胜利提示
+        const victoryToast = document.createElement('div');
+        victoryToast.className = 'victory-toast';
+        // 创建遮罩层
+        const overlay = document.createElement('div');
+        overlay.className = 'victory-overlay';
+        // 创建弹窗
+        const modal = document.createElement('div');
+        modal.className = 'victory-toast';
+        modal.innerHTML = `
+            <div style="font-size: 28px; font-weight: bold; color: #ffd700; line-height: 1.8; font-family: 'Courier New', monospace;">
+                🎉🎉🎉🎉🎉🎉🎉🎉🎉<br>
+                🎉 恭喜 <span style="color: #fff;">${alivePlayer.name}</span> 获胜！🎉<br>
+            🎉🎉🎉🎉🎉🎉🎉🎉🎉
+            </div>
+        `;
+
+        // 3. 组装：弹窗放进遮罩，遮罩放进body
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        modal.addEventListener('click', (e) => {
+            overlay.classList.add('closing');
+            setTimeout(() => {
+                overlay.remove();
+                EventBus.emit('CMD_NOTIFY_SWITCH_SCREEN', 'menu');
+            }, 300);
+        });
     }
 })(window);
 
