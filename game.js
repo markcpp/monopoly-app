@@ -804,6 +804,10 @@
                 owner.money += event.toll;
                 break;
             }
+            case 'confirm-skip': {
+                console.log(`[Game] 事件(路过,跳过,知道了)`);
+                break;
+            }
             default: {
                 console.warn(`[Game] modalActions中,未识别的按钮点击事件: ${action}`);
             }
